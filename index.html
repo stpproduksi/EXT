@@ -48,6 +48,7 @@
   .kitir .brand{ text-align:center; font-size:10.5px; font-weight:700; letter-spacing:.08em; }
   .kitir .judul{ text-align:center; font-size:11px; font-weight:700; margin:2px 0 4px; }
   .kitir hr{ border:none; border-top:1px dashed #000; margin:3px 0; }
+  .kitir .ref{ text-align:center; font-size:10.5px; margin:1px 0 3px; }
   .kitir .nama{ text-align:center; font-size:13px; font-weight:700; margin:3px 0; word-break:break-word; }
   .kitir .berat-wrap{ text-align:center; margin:5px 0; }
   .kitir .berat-wrap .lbl{ font-size:8.5px; letter-spacing:.08em; }
@@ -69,6 +70,8 @@
 <div class="sub">Input data &rarr; simpan ke sheet EXT &rarr; cetak kitir otomatis</div>
 
 <div id="formCard">
+  <div class="field"><label>No. Carsheet</label><input type="text" id="fCarsheet" placeholder="Nomor carsheet"></div>
+
   <div class="row2">
     <div class="field"><label>Tanggal</label><input type="date" id="fTanggal"></div>
     <div class="field"><label>Shift</label>
@@ -87,14 +90,13 @@
         <option value="">- pilih -</option>
         <option value="1">1</option><option value="2">2</option><option value="3">3</option>
         <option value="4">4</option><option value="5">5</option><option value="6">6</option>
-        <option value="7">7</option>
       </select>
     </div>
     <div class="field"><label>Untuk TF</label>
       <select id="fUntukTf">
         <option value="">- pilih -</option>
-        <option>TF5</option><option>TF6</option><option>TF7</option><option>TF8</option><option>TF9</option>
-        <option>TF10</option><option>TF12</option><option>TF13</option><option>TF14</option><option>TF15</option><option>TF16</option>
+        <option>TF5</option><option>TF7</option><option>TF8</option><option>TF9</option>
+        <option>TF10</option><option>TF12</option><option>TF14</option><option>TF15</option><option>TF16</option>
       </select>
     </div>
   </div>
@@ -113,8 +115,9 @@
 <!-- Area ini yang muncul waktu print (form di atas otomatis disembunyikan) -->
 <div id="kitirPrintArea">
   <div class="kitir">
-    <div class="brand">STP LAWANG</div>
-    <div class="judul">KITIR SHEET</div>
+    <div class="brand">STP</div>
+    <div class="judul">KITIR EXTRUDER</div>
+    <div class="ref" id="pCarsheet">No. Carsheet: -</div>
     <hr>
     <div class="nama" id="pUkuran">-</div>
     <div class="berat-wrap">
@@ -142,8 +145,7 @@ function kitirSetDefaultTanggal(){
 }
 kitirSetDefaultTanggal();
 
-var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxp5L0rGdC0ki2M18YjNnylr0aAOXDLCzW5k84fJhT7aCkdlFrPeOY2tH0b75MMjDJh/exec';
-   // <-- isi dengan URL /exec hasil Deploy (Web App) project Kitir Extruder
+var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxp5L0rGdC0ki2M18YjNnylr0aAOXDLCzW5k84fJhT7aCkdlFrPeOY2tH0b75MMjDJh/exec'; // <-- isi dengan URL /exec hasil Deploy (Web App) project Kitir Extruder
 
 /* ---------------------------------------------------------------------
  *  Isi dropdown Ukuran dari sheet "CODE" range F4:F (dipanggil sekali
@@ -177,6 +179,7 @@ function kitirMuatDaftarUkuran(){
 kitirMuatDaftarUkuran();
 
 function kitirResetForm(){
+  document.getElementById('fCarsheet').value = '';
   document.getElementById('fShift').value = '';
   document.getElementById('fExt').value = '';
   document.getElementById('fUntukTf').value = '';
@@ -189,9 +192,16 @@ function kitirResetForm(){
   document.getElementById('fNama').focus();
 }
 
+function kitirJamSekarang(){
+  var n = new Date();
+  return String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+}
+
 function kitirAmbilForm(){
   return {
-    tanggal: document.getElementById('fTanggal').value,
+    carsheet: document.getElementById('fCarsheet').value.trim(),
+    tanggal: document.getElementById('fTanggal').value, // tetap ISO (yyyy-mm-dd), biar bisa di-parse jadi Date asli di .gs
+    jam: kitirJamSekarang(),
     shift: document.getElementById('fShift').value,
     ext: document.getElementById('fExt').value,
     ukuran: document.getElementById('fUkuran').value.trim(),
@@ -202,6 +212,7 @@ function kitirAmbilForm(){
 }
 
 function kitirValidasi(d){
+  if (!d.carsheet) return 'No. Carsheet belum diisi.';
   if (!d.tanggal) return 'Tanggal belum diisi.';
   if (!d.shift) return 'Shift belum dipilih.';
   if (!d.ext) return 'Ext belum dipilih.';
@@ -218,11 +229,12 @@ function kitirFmtTanggal(iso){
 }
 
 function kitirIsiPreview(d){
+  document.getElementById('pCarsheet').textContent = 'No. Carsheet: ' + d.carsheet;
   document.getElementById('pNama').textContent = d.nama;
   document.getElementById('pUkuran').textContent = d.ukuran;
   document.getElementById('pBerat').textContent = Number(d.berat).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' kg';
   document.getElementById('pRute').textContent = 'EXT ' + d.ext + '  \u2192  ' + d.untukTf;
-  document.getElementById('pTanggal').textContent = kitirFmtTanggal(d.tanggal);
+  document.getElementById('pTanggal').textContent = kitirFmtTanggal(d.tanggal) + ' ' + d.jam;
   document.getElementById('pShift').textContent = 'SHIFT ' + d.shift;
 }
 
