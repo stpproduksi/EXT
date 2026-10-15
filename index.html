@@ -187,7 +187,7 @@ function kitirIsiPreview(d){
   document.getElementById('pShift').textContent = 'SHIFT ' + d.shift;
 }
 
-var WEBAPP_URL = ''; // <-- isi dengan URL /exec hasil Deploy (Web App) project Kitir Extruder
+var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbz1lPquFBfD6UC0Zju8rVX4vex7elFfV8c0pUE2Svi7pjBAZTZhb95tFdQzjFIPBFUf/exec'; // <-- isi dengan URL /exec hasil Deploy (Web App) project Kitir Extruder
 
 function kitirKirimSimpan(data, onSuccess, onError){
   var runningInsideAppsScript = (typeof google !== 'undefined' && google.script && google.script.run);
