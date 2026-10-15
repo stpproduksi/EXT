@@ -49,7 +49,6 @@
   .kitir .judul{ text-align:center; font-size:11px; font-weight:700; margin:2px 0 4px; }
   .kitir hr{ border:none; border-top:1px dashed #000; margin:3px 0; }
   .kitir .nama{ text-align:center; font-size:13px; font-weight:700; margin:3px 0; word-break:break-word; }
-  .kitir .ukuran{ text-align:center; font-size:10.5px; margin-bottom:3px; }
   .kitir .berat-wrap{ text-align:center; margin:5px 0; }
   .kitir .berat-wrap .lbl{ font-size:8.5px; letter-spacing:.08em; }
   .kitir .berat-wrap .val{ font-size:22px; font-weight:700; line-height:1.1; }
@@ -99,8 +98,10 @@
     </div>
   </div>
 
-  <div class="field"><label>Nama</label><input type="text" id="fNama" placeholder="Nama produk / sheet"></div>
-  <div class="field"><label>Ukuran</label><input type="text" id="fUkuran" placeholder="Mis. 14 OZ NATURAL"></div>
+  <div class="field"><label>Ukuran</label>
+    <select id="fUkuran"><option value="">- memuat daftar -</option></select>
+  </div>
+  <div class="field"><label>Nama Operator</label><input type="text" id="fNama" placeholder="Nama operator"></div>
   <div class="field"><label>Berat (kg)</label><input type="number" id="fBerat" step="0.01" inputmode="decimal" placeholder="0,00"></div>
 
   <button id="btnSave" onclick="kitirSimpan()">Simpan & Cetak</button>
@@ -114,8 +115,7 @@
     <div class="brand">STP</div>
     <div class="judul">KITIR EXTRUDER</div>
     <hr>
-    <div class="nama" id="pNama">-</div>
-    <div class="ukuran" id="pUkuran">-</div>
+    <div class="nama" id="pUkuran">-</div>
     <div class="berat-wrap">
       <div class="lbl">BERAT</div>
       <div class="val" id="pBerat">-</div>
@@ -125,6 +125,10 @@
     <div class="foot">
       <span id="pTanggal">-</span>
       <span id="pShift">-</span>
+    </div>
+    <div class="foot">
+      <span>Operator:</span>
+      <span id="pNama">-</span>
     </div>
   </div>
 </div>
