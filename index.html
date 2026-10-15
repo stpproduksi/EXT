@@ -42,7 +42,7 @@
   /* ---------------- Area cetak kitir (thermal 58mm) ---------------- */
   #kitirPrintArea{ display:none; }
   .kitir{
-    width:52mm; margin:0 auto; font-family:'Roboto Mono', monospace; color:#000;
+    width:72mm; margin:0 auto; font-family:'Roboto Mono', monospace; color:#000;
     padding:2mm 0;
   }
   .kitir .brand{ text-align:center; font-size:10.5px; font-weight:700; letter-spacing:.08em; }
@@ -59,7 +59,7 @@
     body *{ visibility:hidden; }
     #kitirPrintArea, #kitirPrintArea *{ visibility:visible; }
     #kitirPrintArea{ display:block; position:absolute; top:0; left:0; }
-    @page{ size:58mm auto; margin:0; }
+    @page{ size:80mm auto; margin:0; }
   }
 </style>
 </head>
@@ -141,6 +141,37 @@ function kitirSetDefaultTanggal(){
 }
 kitirSetDefaultTanggal();
 
+/* ---------------------------------------------------------------------
+ *  Isi dropdown Ukuran dari sheet "CODE" range F4:F (dipanggil sekali
+ *  saat halaman dibuka). Dual-mode sama seperti kitirKirimSimpan.
+ * ------------------------------------------------------------------- */
+function kitirMuatDaftarUkuran(){
+  var selectEl = document.getElementById('fUkuran');
+  var runningInsideAppsScript = (typeof google !== 'undefined' && google.script && google.script.run);
+
+  function tampilkan(res){
+    if (!res || !res.ok){
+      selectEl.innerHTML = '<option value="">- gagal memuat -</option>';
+      return;
+    }
+    var opts = '<option value="">- pilih -</option>';
+    res.items.forEach(function(v){
+      opts += '<option value="' + v.replace(/"/g,'&quot;') + '">' + v + '</option>';
+    });
+    selectEl.innerHTML = opts;
+  }
+
+  if (runningInsideAppsScript){
+    google.script.run.withSuccessHandler(tampilkan).withFailureHandler(function(){ tampilkan(null); }).kitirGetUkuranList();
+    return;
+  }
+  fetch(WEBAPP_URL + '?action=ukuranList')
+    .then(function(res){ return res.json(); })
+    .then(tampilkan)
+    .catch(function(){ tampilkan(null); });
+}
+kitirMuatDaftarUkuran();
+
 function kitirResetForm(){
   document.getElementById('fShift').value = '';
   document.getElementById('fExt').value = '';
@@ -170,10 +201,10 @@ function kitirValidasi(d){
   if (!d.tanggal) return 'Tanggal belum diisi.';
   if (!d.shift) return 'Shift belum dipilih.';
   if (!d.ext) return 'Ext belum dipilih.';
-  if (!d.ukuran) return 'Ukuran belum diisi.';
+  if (!d.ukuran) return 'Ukuran belum dipilih.';
   if (!d.untukTf) return 'Untuk TF belum dipilih.';
   if (!d.berat || isNaN(parseFloat(d.berat)) || parseFloat(d.berat) <= 0) return 'Berat belum diisi / tidak valid.';
-  if (!d.nama) return 'Nama belum diisi.';
+  if (!d.nama) return 'Nama operator belum diisi.';
   return null;
 }
 
