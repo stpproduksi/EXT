@@ -151,7 +151,8 @@ function kitirMuatDaftarUkuran(){
 
   function tampilkan(res){
     if (!res || !res.ok){
-      selectEl.innerHTML = '<option value="">- gagal memuat -</option>';
+      selectEl.innerHTML = '<option value="">- gagal: '+(res && res.error ? res.error : 'unknown')+' -</option>';
+      console.log('ERROR UKURAN:', res);
       return;
     }
     var opts = '<option value="">- pilih -</option>';
