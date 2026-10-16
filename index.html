@@ -86,30 +86,19 @@
   <div class="field"><label>No. Carsheet</label><input type="text" id="fCarsheet" placeholder="Nomor carsheet"></div>
 
   <div class="row2">
-    <div class="field"><label>Tanggal</label><input type="date" id="fTanggal"></div>
-    <div class="field"><label>Shift</label>
-      <select id="fShift">
-        <option value="">- pilih -</option>
-        <option value="1">Shift 1</option>
-        <option value="2">Shift 2</option>
-        <option value="3">Shift 3</option>
-      </select>
-    </div>
-  </div>
-
-  <div class="row2">
     <div class="field"><label>Ext</label>
       <select id="fExt">
         <option value="">- pilih -</option>
         <option value="1">1</option><option value="2">2</option><option value="3">3</option>
         <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+        <option value="7">7</option>
       </select>
     </div>
     <div class="field"><label>Untuk TF</label>
       <select id="fUntukTf">
         <option value="">- pilih -</option>
-        <option>TF5</option><option>TF7</option><option>TF8</option><option>TF9</option>
-        <option>TF10</option><option>TF12</option><option>TF14</option><option>TF15</option><option>TF16</option>
+        <option>TF5</option><option>TF6</option><option>TF7</option><option>TF8</option><option>TF9</option>
+        <option>TF10</option><option>TF12</option><option>TF13</option><option>TF14</option><option>TF15</option><option>TF16</option>
       </select>
     </div>
   </div>
@@ -128,8 +117,8 @@
 <!-- Area ini yang muncul waktu print (form di atas otomatis disembunyikan) -->
 <div id="kitirPrintArea">
   <div class="kitir">
-    <div class="brand">STP</div>
-    <div class="judul">KITIR EXTRUDER</div>
+    <div class="brand">STP LAWANG</div>
+    <div class="judul">KITIR SHEET</div>
     <div class="ref" id="pCarsheet">No. Carsheet: -</div>
     <hr>
     <div class="nama" id="pUkuran">-</div>
@@ -165,6 +154,8 @@ function kitirSetDefaultTanggal(){
   document.getElementById('fTanggal').value = iso;
 }
 kitirSetDefaultTanggal();
+
+var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxp5L0rGdC0ki2M18YjNnylr0aAOXDLCzW5k84fJhT7aCkdlFrPeOY2tH0b75MMjDJh/exec'; // <-- isi dengan URL /exec hasil Deploy (Web App) project Kitir Extruder
 
 /* ---------------------------------------------------------------------
  *  Isi dropdown Ukuran dari sheet "CODE" range F4:F (dipanggil sekali
@@ -257,7 +248,6 @@ function kitirIsiPreview(d){
   document.getElementById('pShift').textContent = 'SHIFT ' + d.shift;
 }
 
-var WEBAPP_URL = ''; // <-- isi dengan URL /exec hasil Deploy (Web App) project Kitir Extruder
 
 function kitirKirimSimpan(data, onSuccess, onError){
   var runningInsideAppsScript = (typeof google !== 'undefined' && google.script && google.script.run);
