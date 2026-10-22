@@ -25,6 +25,7 @@
   .field label{ display:block; font-size:11px; font-weight:700; text-transform:uppercase; color:var(--mute); margin-bottom:5px; }
   .field input, .field select{ width:100%; padding:11px 12px; font-size:15px; border:1px solid var(--line); border-radius:7px; background:#fff; }
   .field input:focus, .field select:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 2px rgba(29,78,137,.15); }
+  .field input:disabled, .field select:disabled{ background:#F3F4F6; color:var(--mute); }
   .row2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   #btnSave{ width:100%; padding:13px; font-size:14px; font-weight:700; border:none; border-radius:8px; background:var(--accent); color:#fff; cursor:pointer; margin-top:4px; }
   #btnShareWA{ width:100%; padding:13px; font-size:14px; font-weight:700; border:none; border-radius:8px; background:#25D366; color:#fff; cursor:pointer; margin-top:8px; }
@@ -73,7 +74,7 @@
   <div class="field"><label>Berat (kg)</label><input type="number" id="fBerat" step="0.01" inputmode="decimal" placeholder="0,00"></div>
 
   <button id="btnSave" onclick="kitirSimpan()">Simpan & Cetak</button>
-  <button id="btnShareWA" onclick="kitirSimpanShareWA()">Simpan & Share WA</button>
+  <button id="btnShareWA" onclick="kitirShareWA()" disabled>Share WA</button>
   <button id="btnReset" onclick="kitirResetForm()">Kosongkan Form</button>
   <div id="msg"></div>
 </div>
@@ -100,12 +101,14 @@
 if ('serviceWorker' in navigator){
   window.addEventListener('load', function(){ navigator.serviceWorker.register('service-worker.js').catch(function(){}); });
 }
+var WEBAPP_URL='https://script.google.com/macros/s/AKfycbxp5L0rGdC0ki2M18YjNnylr0aAOXDLCzW5k84fJhT7aCkdlFrPeOY2tH0b75MMjDJh/exec';
+var kitirLast=null; // data yang sudah tersimpan, dipakai untuk Share WA
+
 function kitirSetDefaultTanggal(){
   var d=new Date(); var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   document.getElementById('fTanggal').value=iso;
 }
 kitirSetDefaultTanggal();
-var WEBAPP_URL='https://script.google.com/macros/s/AKfycbxp5L0rGdC0ki2M18YjNnylr0aAOXDLCzW5k84fJhT7aCkdlFrPeOY2tH0b75MMjDJh/exec';
 
 function kitirMuatDaftarUkuran(){
   var selectEl=document.getElementById('fUkuran');
@@ -121,11 +124,23 @@ function kitirMuatDaftarUkuran(){
 }
 kitirMuatDaftarUkuran();
 
+// Kunci atau buka isian form
+function kitirSetFormLocked(on){
+  ['fCarsheet','fTanggal','fShift','fExt','fUntukTf','fUkuran','fNama','fBerat'].forEach(function(id){
+    document.getElementById(id).disabled=on;
+  });
+}
+
+// Satu-satunya tempat form dikosongkan
 function kitirResetForm(){
+  kitirLast=null;
   document.getElementById('fCarsheet').value=''; document.getElementById('fShift').value='';
   document.getElementById('fExt').value=''; document.getElementById('fUntukTf').value='';
   document.getElementById('fNama').value=''; document.getElementById('fUkuran').value='';
   document.getElementById('fBerat').value=''; kitirSetDefaultTanggal();
+  kitirSetFormLocked(false);
+  document.getElementById('btnSave').disabled=false;
+  document.getElementById('btnShareWA').disabled=true;
   document.getElementById('msg').textContent=''; document.getElementById('msg').className='';
 }
 function kitirJamSekarang(){ var n=new Date(); return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0'); }
@@ -163,7 +178,7 @@ function kitirIsiPreview(d){
   document.getElementById('pRute').textContent='EXT '+d.ext+'  →  '+d.untukTf;
   document.getElementById('pTanggal').textContent=kitirFmtTanggal(d.tanggal)+' '+d.jam;
   document.getElementById('pShift').textContent='SHIFT '+d.shift;
-  
+
   // GENERATE BARCODE DARI NO CARSHEET
   try{
     JsBarcode("#pBarcode", d.carsheet, {
@@ -201,33 +216,39 @@ function kitirBuatPesanWA_TextBiasa(d){
 }
 function kitirShareKeWA(pesan){ window.open("https://wa.me/?text="+encodeURIComponent(pesan),"_blank"); }
 
+// 1. Simpan ke sheet EXT lalu cetak. Data tetap di form dan dikunci sampai Kosongkan Form.
 function kitirSimpan(){
-  var data=kitirAmbilForm(); var err=kitirValidasi(data); var msgEl=document.getElementById('msg');
+  var msgEl=document.getElementById('msg');
+  if(kitirLast){ msgEl.textContent='Data sudah tersimpan. Tekan Kosongkan Form untuk input baru.'; msgEl.className='bad'; return; }
+  var data=kitirAmbilForm(); var err=kitirValidasi(data);
   if(err){ msgEl.textContent=err; msgEl.className='bad'; return; }
-  var btn=document.getElementById('btnSave'); var btn2=document.getElementById('btnShareWA');
-  btn.disabled=true; btn2.disabled=true; msgEl.textContent='Menyimpan...'; msgEl.className='';
+  var btn=document.getElementById('btnSave');
+  btn.disabled=true; msgEl.textContent='Menyimpan...'; msgEl.className='';
   kitirKirimSimpan(data,function(res){
-    btn.disabled=false; btn2.disabled=false;
     if(res&&res.ok){
+      kitirLast=data;
+      kitirSetFormLocked(true);
+      btn.disabled=true;
+      document.getElementById('btnShareWA').disabled=false;
       msgEl.textContent='Tersimpan. Menyiapkan cetak...'; msgEl.className='ok';
       kitirIsiPreview(data);
-      setTimeout(function(){ window.print(); kitirResetForm(); }, 200);
-    }else{ msgEl.textContent='Gagal: '+(res&&res.error?res.error:'tidak diketahui'); msgEl.className='bad'; }
-  },function(err){ btn.disabled=false; btn2.disabled=false; msgEl.textContent='Gagal: '+(err&&err.message?err.message:err); msgEl.className='bad'; });
+      setTimeout(function(){ window.print(); msgEl.textContent='Tersimpan & dicetak. Tekan Share WA, atau Kosongkan Form untuk input baru.'; }, 200);
+    }else{
+      btn.disabled=false;
+      msgEl.textContent='Gagal: '+(res&&res.error?res.error:'tidak diketahui'); msgEl.className='bad';
+    }
+  },function(err){
+    btn.disabled=false;
+    msgEl.textContent='Gagal: '+(err&&err.message?err.message:err); msgEl.className='bad';
+  });
 }
-function kitirSimpanShareWA(){
-  var data=kitirAmbilForm(); var err=kitirValidasi(data); var msgEl=document.getElementById('msg');
-  if(err){ msgEl.textContent=err; msgEl.className='bad'; return; }
-  var btn=document.getElementById('btnSave'); var btn2=document.getElementById('btnShareWA');
-  btn.disabled=true; btn2.disabled=true; msgEl.textContent='Menyimpan...'; msgEl.className='';
-  kitirKirimSimpan(data,function(res){
-    btn.disabled=false; btn2.disabled=false;
-    if(res&&res.ok){
-      msgEl.textContent='Tersimpan. Buka WA...'; msgEl.className='ok';
-      kitirShareKeWA(kitirBuatPesanWA_TextBiasa(data));
-      kitirResetForm();
-    }else{ msgEl.textContent='Gagal: '+(res&&res.error?res.error:'tidak diketahui'); msgEl.className='bad'; }
-  },function(err){ btn.disabled=false; btn2.disabled=false; msgEl.textContent='Gagal: '+(err&&err.message?err.message:err); msgEl.className='bad'; });
+
+// 2. Share WA memakai data yang sudah tersimpan, tanpa menyimpan ulang
+function kitirShareWA(){
+  var msgEl=document.getElementById('msg');
+  if(!kitirLast){ msgEl.textContent='Simpan & Cetak dulu.'; msgEl.className='bad'; return; }
+  kitirShareKeWA(kitirBuatPesanWA_TextBiasa(kitirLast));
+  msgEl.textContent='WhatsApp dibuka. Data masih ada di form.'; msgEl.className='ok';
 }
 </script>
 </body>
