@@ -4,13 +4,16 @@
 <base target="_top">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Kitir SHEET - RPP02N</title>
+<title>Kitir SHEET</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1D4E89">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-title" content="Kitir Ext">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Roboto+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<!-- LIB BARCODE -->
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 <style>
   :root{ --bg:#F3F4F6; --card:#FFFFFF; --ink:#14181F; --mute:#5B6472; --line:#E3E6EA; --accent:#1D4E89; --good:#157F3C; --bad:#B91C1C; }
@@ -53,13 +56,10 @@
 </head>
 <body>
 
-<h1>Kitir SHEET - RPP02N</h1>
-<div class="sub">Input → simpan EXT → cetak ke RPP02N WP58D</div>
+<h1>Kitir SHEET</h1>
+<div class="sub">Input &rarr; simpan EXT &rarr; cetak kitir + barcode</div>
 
 <div id="formCard">
-  <button id="btnBTConnect" onclick="kitirConnectRPP02N()" style="width:100%;padding:12px;font-size:13px;font-weight:700;border:1px solid #1D4E89;border-radius:8px;background:#EAF1FB;color:#1D4E89;cursor:pointer;margin-bottom:8px;">🔵 Connect RPP02N (02:2D:BB:0A:52:F7)</button>
-  <button id="btnBTPrint" onclick="kitirPrintViaRawBT(kitirLast)" disabled style="width:100%;padding:12px;font-size:13px;font-weight:700;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--mute);cursor:pointer;margin-bottom:12px;">🖨️ Cetak Ulang ke RPP02N</button>
-
   <div class="field"><label>No. Carsheet</label><input type="text" id="fCarsheet" placeholder="Nomor carsheet"></div>
   <div class="row2">
     <div class="field"><label>Tanggal</label><input type="date" id="fTanggal"></div>
@@ -73,7 +73,7 @@
   <div class="field"><label>Nama Operator</label><input type="text" id="fNama" placeholder="Nama operator"></div>
   <div class="field"><label>Berat (kg)</label><input type="number" id="fBerat" step="0.01" inputmode="decimal" placeholder="0,00"></div>
 
-  <button id="btnSave" onclick="kitirSimpan()">Simpan & Cetak RPP02N</button>
+  <button id="btnSave" onclick="kitirSimpan()">Simpan & Cetak</button>
   <button id="btnShareWA" onclick="kitirShareWA()" disabled>Share WA</button>
   <button id="btnReset" onclick="kitirResetForm()">Kosongkan Form</button>
   <div id="msg"></div>
@@ -91,7 +91,9 @@
     <hr>
     <div class="foot"><span id="pTanggal">-</span><span id="pShift">-</span></div>
     <div class="foot"><span>Operator:</span><span id="pNama">-</span></div>
-    <div class="barcode-wrap"><svg id="pBarcode"></svg></div>
+    <div class="barcode-wrap">
+      <svg id="pBarcode"></svg>
+    </div>
   </div>
 </div>
 
@@ -100,64 +102,14 @@ if ('serviceWorker' in navigator){
   window.addEventListener('load', function(){ navigator.serviceWorker.register('service-worker.js').catch(function(){}); });
 }
 var WEBAPP_URL='https://script.google.com/macros/s/AKfycbxp5L0rGdC0ki2M18YjNnylr0aAOXDLCzW5k84fJhT7aCkdlFrPeOY2tH0b75MMjDJh/exec';
-var kitirLast=null;
+var kitirLast=null; // data yang sudah tersimpan, dipakai untuk Share WA
 
-// ===== CONFIG RPP02N KAMU =====
-var RPP02N_MAC = "02:2D:BB:0A:52:F7";
-var RPP02N_NAME = "RPP02N";
-
-function kitirConnectRPP02N(){
-  var msgEl=document.getElementById('msg');
-  msgEl.textContent='Membuka RawBT... pilih RPP02N '+RPP02N_MAC+' sebagai default, lalu kembali.';
-  msgEl.className='ok';
-  window.location.href = "rawbt:";
-}
-function kitirBuildStrukRPP02N(d){
-  var tgl = kitirFmtTanggal(d.tanggal)+' '+d.jam;
-  var berat = Number(d.berat).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2});
-  var ESC = "\x1B"; var GS = "\x1D";
-  var str = "";
-  str += ESC+"@";
-  str += ESC+"a\x01";
-  str += "STP\nKITIR EXTRUDER\n";
-  str += "----------------\n";
-  str += "No: "+d.carsheet+"\n";
-  str += ESC+"!\x18";
-  str += d.ukuran+"\n";
-  str += ESC+"!\x00";
-  str += "BERAT\n";
-  str += ESC+"!\x30";
-  str += berat+" kg\n";
-  str += ESC+"!\x00";
-  str += "EXT "+d.ext+" -> "+d.untukTf+"\n";
-  str += "----------------\n";
-  str += ESC+"a\x00";
-  str += tgl+" SHIFT "+d.shift+"\n";
-  str += "Opr: "+d.nama+"\n\n";
-  str += ESC+"a\x01";
-  str += d.carsheet+"\n";
-  str += GS+"k\x49"+String.fromCharCode(d.carsheet.length)+d.carsheet+"\x00";
-  str += "\n\n\n\n";
-  str += GS+"V\x41\x00";
-  return str;
-}
-function toBase64(str){ return btoa(unescape(encodeURIComponent(str))); }
-function kitirPrintViaRawBT(d){
-  if(!d){ document.getElementById('msg').textContent='Simpan dulu'; document.getElementById('msg').className='bad'; return; }
-  var escStr = kitirBuildStrukRPP02N(d);
-  var b64 = toBase64(escStr);
-  var url = "rawbt:base64,"+b64;
-  window.location.href = url;
-  document.getElementById('msg').textContent='Mengirim ke RPP02N via RawBT...';
-  document.getElementById('msg').className='ok';
-}
-
-// ===== KODE ASLI KAMU (TIDAK DIUBAH) =====
 function kitirSetDefaultTanggal(){
   var d=new Date(); var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   document.getElementById('fTanggal').value=iso;
 }
 kitirSetDefaultTanggal();
+
 function kitirMuatDaftarUkuran(){
   var selectEl=document.getElementById('fUkuran');
   var runningInsideAppsScript=(typeof google!=='undefined'&&google.script&&google.script.run);
@@ -171,11 +123,15 @@ function kitirMuatDaftarUkuran(){
   fetch(WEBAPP_URL+'?action=ukuranList').then(function(r){return r.json();}).then(tampilkan).catch(function(){tampilkan(null);});
 }
 kitirMuatDaftarUkuran();
+
+// Kunci atau buka isian form
 function kitirSetFormLocked(on){
   ['fCarsheet','fTanggal','fShift','fExt','fUntukTf','fUkuran','fNama','fBerat'].forEach(function(id){
     document.getElementById(id).disabled=on;
   });
 }
+
+// Satu-satunya tempat form dikosongkan
 function kitirResetForm(){
   kitirLast=null;
   document.getElementById('fCarsheet').value=''; document.getElementById('fShift').value='';
@@ -185,7 +141,6 @@ function kitirResetForm(){
   kitirSetFormLocked(false);
   document.getElementById('btnSave').disabled=false;
   document.getElementById('btnShareWA').disabled=true;
-  document.getElementById('btnBTPrint').disabled=true;
   document.getElementById('msg').textContent=''; document.getElementById('msg').className='';
 }
 function kitirJamSekarang(){ var n=new Date(); return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0'); }
@@ -214,6 +169,7 @@ function kitirValidasi(d){
   return null;
 }
 function kitirFmtTanggal(iso){ var p=iso.split('-'); return p[2]+'-'+p[1]+'-'+p[0]; }
+
 function kitirIsiPreview(d){
   document.getElementById('pCarsheet').textContent='No. Carsheet: '+d.carsheet;
   document.getElementById('pNama').textContent=d.nama;
@@ -222,10 +178,22 @@ function kitirIsiPreview(d){
   document.getElementById('pRute').textContent='EXT '+d.ext+'  →  '+d.untukTf;
   document.getElementById('pTanggal').textContent=kitirFmtTanggal(d.tanggal)+' '+d.jam;
   document.getElementById('pShift').textContent='SHIFT '+d.shift;
+
+  // GENERATE BARCODE DARI NO CARSHEET
   try{
-    JsBarcode("#pBarcode", d.carsheet, { format: "CODE128", width: 1.6, height: 55, displayValue: true, fontSize: 11, margin: 2 });
-  }catch(e){ document.getElementById('pBarcode').innerHTML=''; }
+    JsBarcode("#pBarcode", d.carsheet, {
+      format: "CODE128",
+      width: 1.6,
+      height: 55,
+      displayValue: true,
+      fontSize: 11,
+      margin: 2
+    });
+  }catch(e){
+    document.getElementById('pBarcode').innerHTML='';
+  }
 }
+
 function kitirKirimSimpan(data,onSuccess,onError){
   var runningInsideAppsScript=(typeof google!=='undefined'&&google.script&&google.script.run);
   if(runningInsideAppsScript){ google.script.run.withSuccessHandler(onSuccess).withFailureHandler(onError).kitirSimpanData(data); return; }
@@ -248,6 +216,7 @@ function kitirBuatPesanWA_TextBiasa(d){
 }
 function kitirShareKeWA(pesan){ window.open("https://wa.me/?text="+encodeURIComponent(pesan),"_blank"); }
 
+// 1. Simpan ke sheet EXT lalu cetak. Data tetap di form dan dikunci sampai Kosongkan Form.
 function kitirSimpan(){
   var msgEl=document.getElementById('msg');
   if(kitirLast){ msgEl.textContent='Data sudah tersimpan. Tekan Kosongkan Form untuk input baru.'; msgEl.className='bad'; return; }
@@ -261,10 +230,9 @@ function kitirSimpan(){
       kitirSetFormLocked(true);
       btn.disabled=true;
       document.getElementById('btnShareWA').disabled=false;
-      document.getElementById('btnBTPrint').disabled=false;
-      msgEl.textContent='Tersimpan. Mengirim ke RPP02N...'; msgEl.className='ok';
+      msgEl.textContent='Tersimpan. Menyiapkan cetak...'; msgEl.className='ok';
       kitirIsiPreview(data);
-      setTimeout(function(){ kitirPrintViaRawBT(data); }, 400);
+      setTimeout(function(){ window.print(); msgEl.textContent='Tersimpan & dicetak. Tekan Share WA, atau Kosongkan Form untuk input baru.'; }, 200);
     }else{
       btn.disabled=false;
       msgEl.textContent='Gagal: '+(res&&res.error?res.error:'tidak diketahui'); msgEl.className='bad';
@@ -274,6 +242,8 @@ function kitirSimpan(){
     msgEl.textContent='Gagal: '+(err&&err.message?err.message:err); msgEl.className='bad';
   });
 }
+
+// 2. Share WA memakai data yang sudah tersimpan, tanpa menyimpan ulang
 function kitirShareWA(){
   var msgEl=document.getElementById('msg');
   if(!kitirLast){ msgEl.textContent='Simpan & Cetak dulu.'; msgEl.className='bad'; return; }
