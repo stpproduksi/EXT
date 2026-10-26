@@ -232,7 +232,7 @@ function kitirSimpan(){
       document.getElementById('btnShareWA').disabled=false;
       msgEl.textContent='Tersimpan. Menyiapkan cetak...'; msgEl.className='ok';
       kitirIsiPreview(data);
-      setTimeout(function(){ window.print(); msgEl.textContent='Tersimpan & dicetak. Tekan Share WA, atau Kosongkan Form untuk input baru.'; }, 200);
+      setTimeout(function(){ window.print(); msgEl.textContent='Tersimpan & dicetak. Tekan Share WA, atau Kosongkan Form untuk input baru.'; }, 500);
     }else{
       btn.disabled=false;
       msgEl.textContent='Gagal: '+(res&&res.error?res.error:'tidak diketahui'); msgEl.className='bad';
