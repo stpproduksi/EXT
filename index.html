@@ -31,12 +31,31 @@
   #btnSave{ background:var(--accent); margin-top:4px; }
   #btnPrint{ background:#B45309; }
   #btnShareWA{ background:#25D366; }
+  #btnUlang{ background:#fff; color:var(--accent); border:1px solid var(--accent); }
   #btnReset{ background:#fff; color:var(--mute); border:1px solid var(--line); font-size:12.5px; padding:10px; }
   #msg{ font-size:12.5px; margin-top:10px; min-height:16px; } #msg.ok{ color:var(--good); font-weight:700; } #msg.bad{ color:var(--bad); font-weight:700; }
+
+  #ulangPanel{ display:none; margin-top:16px; max-width:420px; border:1px solid var(--line); border-radius:10px; padding:12px; background:#fff; }
+  .ul-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .ul-head b{ font-size:14px; }
+  .ul-head button{ background:none; border:none; font-size:13px; color:var(--mute); cursor:pointer; font-weight:700; }
+  .ul-cari{ display:flex; gap:8px; margin-bottom:10px; }
+  .ul-cari input{ flex:1; padding:10px 12px; font-size:15px; border:1px solid var(--line); border-radius:7px; }
+  .ul-cari button{ padding:10px 16px; font-size:14px; font-weight:700; border:none; border-radius:7px; background:var(--accent); color:#fff; cursor:pointer; }
+  #ulangList{ max-height:380px; overflow-y:auto; }
+  .ul-item{ border:1px solid var(--line); border-radius:8px; padding:9px 10px; margin-bottom:8px; font-size:12.5px; }
+  .ul-item .t{ font-weight:700; font-size:13px; }
+  .ul-item .s{ color:var(--mute); font-size:11.5px; margin-top:2px; }
+  .badge{ display:inline-block; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:4px; vertical-align:middle; }
+  .badge.belum{ background:#FEF3C7; color:#92400E; }
+  .badge.sudah{ background:#DCFCE7; color:#166534; }
+  .ul-item button{ margin-top:6px; width:100%; padding:9px; border:none; border-radius:7px; background:#B45309; color:#fff; font-weight:700; font-size:13px; cursor:pointer; }
+
   #kitirPrintArea{ display:none; }
   .kitir{ width:54mm; margin:0; font-family:'Roboto Mono', monospace; color:#000; padding:0; }
   .kitir .brand{ text-align:center; font-size:10.5px; font-weight:700; letter-spacing:.08em; }
   .kitir .judul{ text-align:center; font-size:11.5px; font-weight:700; margin:1px 0 3px; }
+  .kitir .tag{ text-align:center; font-size:11px; font-weight:700; }
   .kitir hr{ border:none; border-top:1px dashed #000; margin:3px 0; }
   .kitir .ref{ text-align:center; font-size:11px; font-weight:700; margin:1px 0 3px; }
   .kitir .nama{ text-align:center; font-size:12px; font-weight:700; margin:3px 0; word-break:break-word; }
@@ -58,7 +77,7 @@
 <body>
 
 <h1>Kitir SHEET</h1>
-<div class="sub">Input &rarr; simpan EXT &rarr; cetak kitir + barcode</div>
+<div class="sub">Input → simpan EXT → cetak kitir + barcode</div>
 
 <div id="formCard">
   <div class="field"><label>No. Carsheet</label><input type="text" id="fCarsheet" placeholder="Nomor carsheet"></div>
@@ -68,7 +87,7 @@
   </div>
   <div class="row2">
     <div class="field"><label>Ext</label><select id="fExt"><option value="">- pilih -</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select></div>
-    <div class="field"><label>Untuk TF</label><select id="fUntukTf"><option value="">- pilih -</option><option>TF04</option><option>TF05</option><option>TF06</option><option>TF07</option><option>TF08</option><option>TF09</option><option>TF10</option><option>TF12</option><option>TF13</option><option>TF14</option><option>TF15</option><option>TF16</option></select></div>
+    <div class="field"><label>Untuk TF</label><select id="fUntukTf"><option value="">- pilih -</option><option>TF05</option><option>TF06</option><option>TF07</option><option>TF08</option><option>TF09</option><option>TF10</option><option>TF12</option><option>TF13</option><option>TF14</option><option>TF15</option><option>TF16</option></select></div>
   </div>
   <div class="field"><label>Ukuran</label><select id="fUkuran"><option value="">- memuat daftar -</option></select></div>
   <div class="field"><label>Nama Operator</label><input type="text" id="fNama" placeholder="Nama operator"></div>
@@ -77,14 +96,28 @@
   <button id="btnSave" class="btn" onclick="kitirSimpan()">Simpan</button>
   <button id="btnPrint" class="btn" onclick="kitirCetak()" disabled>Cetak</button>
   <button id="btnShareWA" class="btn" onclick="kitirShareWA()" disabled>Share WA</button>
+  <button id="btnUlang" class="btn" onclick="kitirBukaUlang()">Cari Cetak Ulang</button>
   <button id="btnReset" class="btn" onclick="kitirResetForm()">Kosongkan Form</button>
   <div id="msg"></div>
+</div>
+
+<div id="ulangPanel">
+  <div class="ul-head">
+    <b>Cari Cetak Ulang</b>
+    <button type="button" onclick="kitirTutupUlang()">Tutup ✕</button>
+  </div>
+  <div class="ul-cari">
+    <input type="text" id="ulCari" placeholder="Ketik no. carsheet" inputmode="numeric" onkeydown="if(event.key==='Enter'){kitirCariUlang();}">
+    <button type="button" onclick="kitirCariUlang()">Cari</button>
+  </div>
+  <div id="ulangList"></div>
 </div>
 
 <div id="kitirPrintArea">
   <div class="kitir">
     <div class="brand">STP</div>
     <div class="judul">KITIR SHEET</div>
+    <div class="tag" id="pTag"></div>
     <div class="ref" id="pCarsheet">No. Carsheet: -</div>
     <hr>
     <div class="nama" id="pUkuran">-</div>
@@ -106,6 +139,9 @@ var WEBAPP_URL='https://script.google.com/macros/s/AKfycbxp5L0rGdC0ki2M18YjNnylr
 var KITIR_KEY='kitirSaved';
 var kitirState=null;   // { data, sid } setelah simpan sukses
 var kitirDraft=null;   // { sid, json } untuk retry, supaya tidak ganda
+var ulangCache=[];     // hasil cari carsheet untuk cetak ulang
+
+function esc(s){ return String(s===null||s===undefined?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 
 function kitirSetDefaultTanggal(){
   var d=new Date();
@@ -113,9 +149,7 @@ function kitirSetDefaultTanggal(){
 }
 kitirSetDefaultTanggal();
 
-function kitirNewSid(){
-  return 'K'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
-}
+function kitirNewSid(){ return 'K'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 
 function kitirMuatDaftarUkuran(){
   var selectEl=document.getElementById('fUkuran');
@@ -175,9 +209,15 @@ function kitirValidasi(d){
   return null;
 }
 
-function kitirFmtTanggal(iso){ var p=iso.split('-'); return p[2]+'-'+p[1]+'-'+p[0]; }
+function kitirFmtTanggal(iso){
+  if(!iso) return '';
+  var p=String(iso).split('-');
+  return p.length===3 ? p[2]+'-'+p[1]+'-'+p[0] : String(iso);
+}
 
-function kitirIsiPreview(d){
+// ulang=true menambahkan tulisan CETAK ULANG di struk
+function kitirIsiPreview(d, ulang){
+  document.getElementById('pTag').textContent = ulang ? '** CETAK ULANG **' : '';
   document.getElementById('pCarsheet').textContent='No. Carsheet: '+d.carsheet;
   document.getElementById('pNama').textContent=d.nama;
   document.getElementById('pUkuran').textContent=d.ukuran;
@@ -186,7 +226,7 @@ function kitirIsiPreview(d){
   document.getElementById('pTanggal').textContent=kitirFmtTanggal(d.tanggal)+' '+d.jam;
   document.getElementById('pShift').textContent='SHIFT '+d.shift;
   try{
-    JsBarcode("#pBarcode", d.carsheet, {format:"CODE128", width:1.6, height:55, displayValue:true, fontSize:11, margin:2});
+    JsBarcode("#pBarcode", String(d.carsheet), {format:"CODE128", width:1.6, height:55, displayValue:true, fontSize:11, margin:2});
   }catch(e){
     document.getElementById('pBarcode').innerHTML='';
   }
@@ -216,7 +256,7 @@ function kitirBuatPesanWA_TextBiasa(d){
 
 function kitirShareKeWA(pesan){ window.open("https://wa.me/?text="+encodeURIComponent(pesan),"_blank"); }
 
-// 1. Simpan ke sheet EXT. Tidak mencetak otomatis, cetak dilakukan dengan tombol Cetak.
+// 1. Simpan ke sheet EXT. Cetak dilakukan dengan tombol Cetak.
 function kitirSimpan(){
   var msgEl=document.getElementById('msg');
   if(kitirState){ msgEl.textContent='Data sudah tersimpan. Pakai Cetak, atau Kosongkan Form untuk input baru.'; msgEl.className='bad'; return; }
@@ -239,7 +279,7 @@ function kitirSimpan(){
       kitirState={data:data, sid:sid};
       kitirDraft=null;
       try{ localStorage.setItem(KITIR_KEY, JSON.stringify(kitirState)); }catch(e){}
-      kitirIsiPreview(data);
+      kitirIsiPreview(data,false);
       kitirTampilSudahSimpan();
       msgEl.textContent=(res.duplicate?'Data sudah tersimpan sebelumnya. ':'Tersimpan. ')+'Tekan Cetak jika struk belum keluar.';
       msgEl.className='ok';
@@ -255,11 +295,11 @@ function kitirSimpan(){
   });
 }
 
-// 2. Cetak bisa diulang kapan saja tanpa menyimpan ulang
+// 2. Cetak data yang baru disimpan (bisa diulang)
 function kitirCetak(){
   var msgEl=document.getElementById('msg');
   if(!kitirState){ msgEl.textContent='Belum ada data tersimpan.'; msgEl.className='bad'; return; }
-  kitirIsiPreview(kitirState.data);
+  kitirIsiPreview(kitirState.data,false);
   setTimeout(function(){ window.print(); }, 300);
 }
 
@@ -287,6 +327,71 @@ function kitirResetForm(){
   document.getElementById('msg').textContent=''; document.getElementById('msg').className='';
 }
 
+// ===== CARI CETAK ULANG: ketik carsheet, semua baris dengan carsheet itu tampil (hanya membaca) =====
+
+function kitirBukaUlang(){
+  var p=document.getElementById('ulangPanel');
+  p.style.display='block';
+  document.getElementById('ulCari').focus();
+  p.scrollIntoView({behavior:'smooth'});
+}
+
+function kitirTutupUlang(){ document.getElementById('ulangPanel').style.display='none'; }
+
+function kitirCariUlang(){
+  var kode=document.getElementById('ulCari').value.trim();
+  var list=document.getElementById('ulangList');
+  if(!kode){ list.innerHTML='<div class="bad">Ketik no. carsheet dulu.</div>'; return; }
+  list.innerHTML='<div style="color:var(--mute);font-size:12.5px">Mencari...</div>';
+  fetch(WEBAPP_URL+'?action=extList&carsheet='+encodeURIComponent(kode))
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if(!res||!res.ok){ list.innerHTML='<div class="bad">'+esc(res&&res.error?res.error:'Tidak ditemukan')+'</div>'; return; }
+      ulangCache=res.items||[];
+      kitirRenderUlang();
+    })
+    .catch(function(e){ list.innerHTML='<div class="bad">Gagal mencari: '+esc(e.message)+'</div>'; });
+}
+
+function kitirRenderUlang(){
+  var list=document.getElementById('ulangList');
+  if(!ulangCache.length){ list.innerHTML='<div style="color:var(--mute);font-size:12.5px">Carsheet tidak ditemukan.</div>'; return; }
+  var html='';
+  ulangCache.forEach(function(it,idx){
+    var badge = it.status==='BELUM'
+      ? '<span class="badge belum">Belum di TF</span>'
+      : '<span class="badge sudah">Sudah di TF</span>';
+    html+='<div class="ul-item">'+
+      '<div class="t">'+esc(it.carsheet)+badge+'</div>'+
+      '<div class="s">'+esc(it.ukuran)+' | '+esc(it.berat)+' kg</div>'+
+      '<div class="s">EXT '+esc(it.ext)+' → '+esc(it.untukTf)+' | '+esc(it.tanggalTxt)+' '+esc(it.jam)+' | Shift '+esc(it.shift)+'</div>'+
+      '<div class="s">Operator: '+esc(it.nama)+'</div>'+
+      '<button type="button" onclick="kitirCetakUlang('+idx+')">🖨 Cetak Ulang</button>'+
+      '</div>';
+  });
+  list.innerHTML=html;
+}
+
+// Cetak ulang: hanya membaca data dari hasil cari, tidak menulis ke sheet dan tidak mengubah form
+function kitirCetakUlang(idx){
+  var it=ulangCache[idx];
+  if(!it) return;
+  var d={
+    tanggal: it.tglIso,
+    jam: it.jam,
+    shift: it.shift,
+    ext: it.ext,
+    untukTf: it.untukTf,
+    ukuran: it.ukuran,
+    berat: it.berat,
+    nama: it.nama,
+    carsheet: it.carsheet
+  };
+  if(!d.tanggal){ d.tanggal=(function(){ var n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0'); })(); }
+  kitirIsiPreview(d,true);
+  setTimeout(function(){ window.print(); }, 300);
+}
+
 // Saat halaman dibuka ulang, pulihkan status tersimpan dari browser
 function kitirPulihkan(){
   var raw=null;
@@ -294,7 +399,7 @@ function kitirPulihkan(){
   if(!raw) return;
   try{
     kitirState=JSON.parse(raw);
-    kitirIsiPreview(kitirState.data);
+    kitirIsiPreview(kitirState.data,false);
     kitirTampilSudahSimpan();
     var msgEl=document.getElementById('msg');
     msgEl.textContent='Ada data tersimpan. Tekan Cetak jika struk belum keluar, atau Kosongkan Form untuk input baru.';
