@@ -107,7 +107,7 @@
     <button type="button" onclick="kitirTutupUlang()">Tutup ✕</button>
   </div>
   <div class="ul-cari">
-    <input type="text" id="ulCari" placeholder="Ketik no. carsheet" inputmode="numeric" onkeydown="if(event.key==='Enter'){kitirCariUlang();}">
+    <input type="text" id="ulCari" placeholder="Ketik no. carsheet" inputmode="text" autocapitalize="characters" autocomplete="off" onkeydown="if(event.key==='Enter'){kitirCariUlang();}">
     <button type="button" onclick="kitirCariUlang()">Cari</button>
   </div>
   <div id="ulangList"></div>
