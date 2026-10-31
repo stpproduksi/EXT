@@ -90,7 +90,7 @@
     <div class="field"><label>Untuk TF</label><select id="fUntukTf"><option value="">- pilih -</option><option>TF05</option><option>TF06</option><option>TF07</option><option>TF08</option><option>TF09</option><option>TF10</option><option>TF12</option><option>TF13</option><option>TF14</option><option>TF15</option><option>TF16</option></select></div>
   </div>
   <div class="field"><label>Ukuran</label><select id="fUkuran"><option value="">- memuat daftar -</option></select></div>
-  <div class="field"><label>Nama Operator</label><input type="text" id="fNama" placeholder="Nama operator"></div>
+  <div class="field"><label>Nama Operator</label><select id="fNama"></select></div>
   <div class="field"><label>Berat (kg)</label><input type="number" id="fBerat" step="0.01" inputmode="decimal" placeholder="0,00"></div>
 
   <button id="btnSave" class="btn" onclick="kitirSimpan()">Simpan</button>
@@ -143,6 +143,17 @@ var ulangCache=[];     // hasil cari carsheet untuk cetak ulang
 
 function esc(s){ return String(s===null||s===undefined?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 
+var OPERATOR_LIST=['Agus','Adis','David','Singgih','Viky'];
+
+function isiOperator(selId){
+  var sel=document.getElementById(selId);
+  sel.innerHTML='<option value="">- pilih -</option>';
+  OPERATOR_LIST.slice().sort(function(a,b){ return a.localeCompare(b,'id'); }).forEach(function(n){
+    var o=document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o);
+  });
+}
+isiOperator('fNama');
+  
 function kitirSetDefaultTanggal(){
   var d=new Date();
   document.getElementById('fTanggal').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
