@@ -153,7 +153,7 @@ function isiOperator(selId){
   });
 }
 isiOperator('fNama');
-  
+
 function kitirSetDefaultTanggal(){
   var d=new Date();
   document.getElementById('fTanggal').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -161,6 +161,12 @@ function kitirSetDefaultTanggal(){
 kitirSetDefaultTanggal();
 
 function kitirNewSid(){ return 'K'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+
+// Jam HH:mm (4 digit)
+function jamSekarang(){
+  var n=new Date();
+  return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+}
 
 function kitirMuatDaftarUkuran(){
   var selectEl=document.getElementById('fUkuran');
@@ -189,16 +195,11 @@ function kitirTampilSudahSimpan(){
   document.getElementById('btnShareWA').disabled=false;
 }
 
-function kitirJamSekarang(){
-  var n=new Date();
-  return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
-}
-
 function kitirAmbilForm(){
   return {
     carsheet: document.getElementById('fCarsheet').value.trim(),
     tanggal: document.getElementById('fTanggal').value,
-    jam: kitirJamSekarang(),
+    jam: jamSekarang(),
     shift: document.getElementById('fShift').value,
     ext: document.getElementById('fExt').value,
     ukuran: document.getElementById('fUkuran').value.trim(),
@@ -243,11 +244,18 @@ function kitirIsiPreview(d, ulang){
   }
 }
 
+// Simpan lewat GET, sama dengan halaman lain
 function kitirKirimSimpan(data,onSuccess,onError){
   var inApps=(typeof google!=='undefined'&&google.script&&google.script.run);
   if(inApps){ google.script.run.withSuccessHandler(onSuccess).withFailureHandler(onError).kitirSimpanData(data); return; }
-  fetch(WEBAPP_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(data)})
-    .then(function(res){return res.json();}).then(onSuccess).catch(onError);
+  fetch(WEBAPP_URL+'?action=save&payload='+encodeURIComponent(JSON.stringify(data)))
+    .then(function(res){ return res.text(); })
+    .then(function(t){
+      var res;
+      try{ res=JSON.parse(t); }catch(e){ res={ok:false,error:'Respon server: '+t.slice(0,200)}; }
+      onSuccess(res);
+    })
+    .catch(onError);
 }
 
 function kitirBuatPesanWA_TextBiasa(d){
