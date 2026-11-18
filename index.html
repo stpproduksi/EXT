@@ -446,15 +446,16 @@ function leCari(){
       if(!res.ok){ box.innerHTML='<div class="bad">'+esc(res.error)+'</div>'; return; }
       if(!res.items.length){ box.innerHTML='Tidak ada data.'; return; }
 
-      var grup={};
+      var grup={}, grand=0;
       res.items.forEach(function(it){
         var ex='EXT '+(it.ext||'-'), b=Number(it.berat)||0;
         if(!grup[ex]) grup[ex]={total:0, rows:[]};
         grup[ex].total+=b;
         grup[ex].rows.push(it);
+        grand+=b;
       });
 
-      box.innerHTML=Object.keys(grup).sort().map(function(ex){
+      var html=Object.keys(grup).sort().map(function(ex){
         var g=grup[ex];
         return '<div class="card" style="font-family:monospace">'+
           '<div style="font-size:15px;font-weight:bold;margin-bottom:6px">'+esc(ex)+
@@ -468,10 +469,15 @@ function leCari(){
           }).join('')+
           '</div>';
       }).join('');
+
+      html+='<div class="card" style="font-family:monospace;font-size:15px;font-weight:bold">'+
+        'TOTAL&nbsp;&nbsp;&nbsp;'+fmtN(grand)+' kg<br>'+
+        '<small style="font-weight:normal">'+res.items.length+' carsheet</small></div>';
+
+      box.innerHTML=html;
     })
     .catch(function(e){ box.innerHTML='<div class="bad">Gagal: '+esc(e.message)+'</div>'; });
 }
-
 function kitirPulihkan(){
   var raw=null;
   try{ raw=localStorage.getItem(KITIR_KEY); }catch(e){}
