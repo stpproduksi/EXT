@@ -32,7 +32,6 @@
   #btnPrint{ background:#B45309; }
   #btnShareWA{ background:#25D366; }
   #btnUlang{ background:#fff; color:var(--accent); border:1px solid var(--accent); }
-  #btnLihat{ background:#fff; color:var(--accent); border:1px solid var(--accent); }
   #btnReset{ background:#fff; color:var(--mute); border:1px solid var(--line); font-size:12.5px; padding:10px; }
   #msg{ font-size:12.5px; margin-top:10px; min-height:16px; } #msg.ok{ color:var(--good); font-weight:700; } #msg.bad{ color:var(--bad); font-weight:700; }
 
@@ -52,7 +51,8 @@
   .badge.sudah{ background:#DCFCE7; color:#166534; }
   .ul-item button{ margin-top:6px; width:100%; padding:9px; border:none; border-radius:7px; background:#B45309; color:#fff; font-weight:700; font-size:13px; cursor:pointer; }
 
-  #lihatPanel{ display:none; margin-top:16px; max-width:420px; border:1px solid var(--line); border-radius:10px; padding:12px; background:#fff; }
+  #menuAtas{ max-width:420px; margin-bottom:12px; }
+  #menuAtas .btn{ margin:0; flex:1; }
   .lh-row{ display:flex; justify-content:space-between; font-size:13px; padding:3px 0; }
   .lh-row b{ font-family:'Roboto Mono',monospace; }
   .lh-card{ border:1px solid var(--line); border-radius:8px; padding:10px; margin-top:10px; }
@@ -89,6 +89,22 @@
 <h1>Kitir SHEET</h1>
 <div class="sub">Input → simpan EXT → cetak kitir + barcode</div>
 
+<div id="menuAtas" style="display:flex;gap:6px">
+  <button id="tabForm" class="btn" style="margin:0;flex:1" onclick="tabKitir('form')">Input EXT</button>
+  <button id="tabLihat" class="btn" style="margin:0;flex:1;background:#fff;color:#1D4E89;border:1px solid #1D4E89" onclick="tabKitir('lihat')">Lihat EXT</button>
+</div>
+
+<div id="panelLihat" style="display:none;max-width:420px;background:#fff;border:1px solid #E3E6EA;border-radius:10px;padding:12px">
+  <div class="row2">
+    <div class="field" style="margin:0"><label>Tanggal</label><input type="date" id="leTgl"></div>
+    <div class="field" style="margin:0"><label>Shift</label>
+      <select id="leShift"><option value="">Semua</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
+    </div>
+  </div>
+  <button class="btn" style="margin-top:10px" onclick="leCari()">TAMPILKAN</button>
+  <div id="leBox" style="margin-top:8px"></div>
+</div>
+
 <div id="formCard">
   <div class="field"><label>No. Carsheet</label><input type="text" id="fCarsheet" placeholder="Nomor carsheet"></div>
   <div class="row2">
@@ -107,7 +123,6 @@
   <button id="btnPrint" class="btn" onclick="kitirCetak()" disabled>Cetak</button>
   <button id="btnShareWA" class="btn" onclick="kitirShareWA()" disabled>Share WA</button>
   <button id="btnUlang" class="btn" onclick="kitirBukaUlang()">Cari Cetak Ulang</button>
-  <button id="btnLihat" class="btn" onclick="lePanelLihat()">Lihat EXT</button>
   <button id="btnReset" class="btn" onclick="kitirResetForm()">Kosongkan Form</button>
   <div id="msg"></div>
 </div>
@@ -122,21 +137,6 @@
     <button type="button" onclick="kitirCariUlang()">Cari</button>
   </div>
   <div id="ulangList"></div>
-</div>
-
-<div id="lihatPanel">
-  <div class="ul-head">
-    <b>Lihat EXT</b>
-    <button type="button" onclick="lePanelLihat()">Tutup ✕</button>
-  </div>
-  <div class="ul-cari">
-    <input type="date" id="leTgl">
-    <select id="leShift" style="flex:0 0 110px;padding:10px;border:1px solid var(--line);border-radius:7px;font-size:15px">
-      <option value="">Semua</option><option value="1">1</option><option value="2">2</option><option value="3">3</option>
-    </select>
-  </div>
-  <button type="button" class="btn" style="margin-top:0" onclick="leCari()">TAMPILKAN</button>
-  <div id="leBox" style="margin-top:8px"></div>
 </div>
 
 <div id="kitirPrintArea">
@@ -163,9 +163,9 @@ if ('serviceWorker' in navigator){
 
 var WEBAPP_URL='https://script.google.com/macros/s/AKfycbxp5L0rGdC0ki2M18YjNnylr0aAOXDLCzW5k84fJhT7aCkdlFrPeOY2tH0b75MMjDJh/exec';
 var KITIR_KEY='kitirSaved';
-var kitirState=null;   // { data, sid } setelah simpan sukses
-var kitirDraft=null;   // { sid, json } untuk retry, supaya tidak ganda
-var ulangCache=[];     // hasil cari carsheet untuk cetak ulang
+var kitirState=null;
+var kitirDraft=null;
+var ulangCache=[];
 
 function esc(s){ return String(s===null||s===undefined?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 function fmtN(n){ return Number(n||0).toLocaleString('id-ID',{maximumFractionDigits:2}); }
@@ -189,7 +189,6 @@ kitirSetDefaultTanggal();
 
 function kitirNewSid(){ return 'K'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 
-// Jam HH:mm (4 digit)
 function jamSekarang(){
   var n=new Date();
   return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
@@ -254,7 +253,6 @@ function kitirFmtTanggal(iso){
   return p.length===3 ? p[2]+'-'+p[1]+'-'+p[0] : String(iso);
 }
 
-// ulang=true menambahkan tulisan CETAK ULANG di struk
 function kitirIsiPreview(d, ulang){
   document.getElementById('pTag').textContent = ulang ? '** CETAK ULANG **' : '';
   document.getElementById('pCarsheet').textContent='No. Carsheet: '+d.carsheet;
@@ -271,7 +269,6 @@ function kitirIsiPreview(d, ulang){
   }
 }
 
-// Simpan lewat GET, sama dengan halaman lain
 function kitirKirimSimpan(data,onSuccess,onError){
   var inApps=(typeof google!=='undefined'&&google.script&&google.script.run);
   if(inApps){ google.script.run.withSuccessHandler(onSuccess).withFailureHandler(onError).kitirSimpanData(data); return; }
@@ -302,7 +299,6 @@ function kitirBuatPesanWA_TextBiasa(d){
 
 function kitirShareKeWA(pesan){ window.open("https://wa.me/?text="+encodeURIComponent(pesan),"_blank"); }
 
-// 1. Simpan ke sheet EXT. Cetak dilakukan dengan tombol Cetak.
 function kitirSimpan(){
   var msgEl=document.getElementById('msg');
   if(kitirState){ msgEl.textContent='Data sudah tersimpan. Pakai Cetak, atau Kosongkan Form untuk input baru.'; msgEl.className='bad'; return; }
@@ -311,7 +307,6 @@ function kitirSimpan(){
   var err=kitirValidasi(data);
   if(err){ msgEl.textContent=err; msgEl.className='bad'; return; }
 
-  // Retry dengan data yang sama memakai sid yang sama, supaya backend tidak menulis dua kali
   var json=JSON.stringify(data);
   if(!kitirDraft||kitirDraft.json!==json){ kitirDraft={sid:kitirNewSid(), json:json}; }
   data.sid=kitirDraft.sid;
@@ -341,7 +336,6 @@ function kitirSimpan(){
   });
 }
 
-// 2. Cetak data yang baru disimpan (bisa diulang)
 function kitirCetak(){
   var msgEl=document.getElementById('msg');
   if(!kitirState){ msgEl.textContent='Belum ada data tersimpan.'; msgEl.className='bad'; return; }
@@ -349,7 +343,6 @@ function kitirCetak(){
   setTimeout(function(){ window.print(); }, 300);
 }
 
-// 3. Share WA memakai data yang sudah tersimpan
 function kitirShareWA(){
   var msgEl=document.getElementById('msg');
   if(!kitirState){ msgEl.textContent='Simpan dulu.'; msgEl.className='bad'; return; }
@@ -357,7 +350,6 @@ function kitirShareWA(){
   msgEl.textContent='WhatsApp dibuka. Data masih ada di form.'; msgEl.className='ok';
 }
 
-// 4. Kosongkan form, satu-satunya cara untuk input baru
 function kitirResetForm(){
   kitirState=null;
   kitirDraft=null;
@@ -372,8 +364,6 @@ function kitirResetForm(){
   document.getElementById('btnShareWA').disabled=true;
   document.getElementById('msg').textContent=''; document.getElementById('msg').className='';
 }
-
-// ===== CARI CETAK ULANG: ketik carsheet, semua baris dengan carsheet itu tampil (hanya membaca) =====
 
 function kitirBukaUlang(){
   var p=document.getElementById('ulangPanel');
@@ -418,7 +408,6 @@ function kitirRenderUlang(){
   list.innerHTML=html;
 }
 
-// Cetak ulang: hanya membaca data dari hasil cari, tidak menulis ke sheet dan tidak mengubah form
 function kitirCetakUlang(idx){
   var it=ulangCache[idx];
   if(!it) return;
@@ -438,18 +427,26 @@ function kitirCetakUlang(idx){
   setTimeout(function(){ window.print(); }, 300);
 }
 
-// ===== LIHAT EXT: rekap per ukuran dan per TF (hanya membaca) =====
+// ===== MENU ATAS: Input EXT / Lihat EXT =====
 
-function lePanelLihat(){
-  var p=document.getElementById('lihatPanel');
-  var buka = p.style.display!=='block';
-  p.style.display = buka ? 'block' : 'none';
-  if(buka){
-    var t=document.getElementById('leTgl');
-    if(!t.value) kitirSetDefaultTanggal(), t.value=document.getElementById('fTanggal').value;
-    p.scrollIntoView({behavior:'smooth'});
+function tabKitir(t){
+  var lihat = t==='lihat';
+  document.getElementById('formCard').style.display = lihat ? 'none' : '';
+  document.getElementById('ulangPanel').style.display = 'none';
+  document.getElementById('panelLihat').style.display = lihat ? 'block' : 'none';
+  var tf=document.getElementById('tabForm'), tl=document.getElementById('tabLihat');
+  tf.style.background = lihat ? '#fff' : '';
+  tf.style.color = lihat ? '#1D4E89' : '#fff';
+  tf.style.border = lihat ? '1px solid #1D4E89' : 'none';
+  tl.style.background = lihat ? '' : '#fff';
+  tl.style.color = lihat ? '#fff' : '#1D4E89';
+  tl.style.border = lihat ? 'none' : '1px solid #1D4E89';
+  if(lihat && !document.getElementById('leTgl').value){
+    document.getElementById('leTgl').value = document.getElementById('fTanggal').value;
   }
 }
+
+// ===== LIHAT EXT: rincian per Ukuran dan per EXT (hanya membaca) =====
 
 function leCari(){
   var tgl=document.getElementById('leTgl').value, shift=document.getElementById('leShift').value;
@@ -462,20 +459,20 @@ function leCari(){
       if(!res.ok){ box.innerHTML='<div class="bad">'+esc(res.error)+'</div>'; return; }
       if(!res.items.length){ box.innerHTML='Tidak ada data.'; return; }
 
-      var grupUk={}, grupTf={}, grand=0;
+      var grupUk={}, grupExt={}, grand=0;
       res.items.forEach(function(it){
-        var uk=it.ukuran||'-', tf=it.untukTf||'-', b=Number(it.berat)||0;
+        var uk=it.ukuran||'-', ex='EXT '+(it.ext||'-'), b=Number(it.berat)||0;
         if(!grupUk[uk]) grupUk[uk]={total:0, rows:[]};
-        if(!grupTf[tf]) grupTf[tf]={total:0, rows:[]};
+        if(!grupExt[ex]) grupExt[ex]={total:0, rows:[]};
         grupUk[uk].total+=b; grupUk[uk].rows.push(it);
-        grupTf[tf].total+=b; grupTf[tf].rows.push(it);
+        grupExt[ex].total+=b; grupExt[ex].rows.push(it);
         grand+=b;
       });
 
       function daftar(it){
         return '<div class="lh-item"><div class="a">'+esc(it.carsheet)+' | '+fmtN(it.berat)+' kg</div>'+
           '<div class="b">'+esc(it.tanggalTxt)+' '+esc(it.jam)+' | Shift '+esc(it.shift)+
-          ' | EXT '+esc(it.ext)+' → '+esc(it.untukTf)+' | '+esc(it.nama)+'</div></div>';
+          ' | TF '+esc(it.untukTf)+' | '+esc(it.nama)+'</div></div>';
       }
       function blok(judul, grup){
         return '<div class="lh-card"><div class="jdl"><span>'+judul+'</span></div>'+
@@ -489,12 +486,11 @@ function leCari(){
         '<div class="lh-row"><span>Jumlah carsheet</span><b>'+res.items.length+'</b></div>'+
         '<div class="lh-row"><span>Total berat</span><b>'+fmtN(grand)+' kg</b></div>'+
         blok('Per Ukuran', grupUk)+
-        blok('Per TF', grupTf);
+        blok('Per EXT', grupExt);
     })
     .catch(function(e){ box.innerHTML='<div class="bad">Gagal: '+esc(e.message)+'</div>'; });
 }
 
-// Saat halaman dibuka ulang, pulihkan status tersimpan dari browser
 function kitirPulihkan(){
   var raw=null;
   try{ raw=localStorage.getItem(KITIR_KEY); }catch(e){}
