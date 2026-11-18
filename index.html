@@ -32,6 +32,7 @@
   #btnPrint{ background:#B45309; }
   #btnShareWA{ background:#25D366; }
   #btnUlang{ background:#fff; color:var(--accent); border:1px solid var(--accent); }
+  #btnLihat{ background:#fff; color:var(--accent); border:1px solid var(--accent); }
   #btnReset{ background:#fff; color:var(--mute); border:1px solid var(--line); font-size:12.5px; padding:10px; }
   #msg{ font-size:12.5px; margin-top:10px; min-height:16px; } #msg.ok{ color:var(--good); font-weight:700; } #msg.bad{ color:var(--bad); font-weight:700; }
 
@@ -50,6 +51,15 @@
   .badge.belum{ background:#FEF3C7; color:#92400E; }
   .badge.sudah{ background:#DCFCE7; color:#166534; }
   .ul-item button{ margin-top:6px; width:100%; padding:9px; border:none; border-radius:7px; background:#B45309; color:#fff; font-weight:700; font-size:13px; cursor:pointer; }
+
+  #lihatPanel{ display:none; margin-top:16px; max-width:420px; border:1px solid var(--line); border-radius:10px; padding:12px; background:#fff; }
+  .lh-row{ display:flex; justify-content:space-between; font-size:13px; padding:3px 0; }
+  .lh-row b{ font-family:'Roboto Mono',monospace; }
+  .lh-card{ border:1px solid var(--line); border-radius:8px; padding:10px; margin-top:10px; }
+  .lh-card .jdl{ display:flex; justify-content:space-between; font-weight:700; font-size:13px; margin-bottom:6px; }
+  .lh-item{ border-top:1px dashed var(--line); padding:6px 0; font-size:12.5px; }
+  .lh-item .a{ font-weight:700; }
+  .lh-item .b{ color:var(--mute); font-size:11.5px; margin-top:2px; }
 
   #kitirPrintArea{ display:none; }
   .kitir{ width:54mm; margin:0; font-family:'Roboto Mono', monospace; color:#000; padding:0; }
@@ -97,6 +107,7 @@
   <button id="btnPrint" class="btn" onclick="kitirCetak()" disabled>Cetak</button>
   <button id="btnShareWA" class="btn" onclick="kitirShareWA()" disabled>Share WA</button>
   <button id="btnUlang" class="btn" onclick="kitirBukaUlang()">Cari Cetak Ulang</button>
+  <button id="btnLihat" class="btn" onclick="lePanelLihat()">Lihat EXT</button>
   <button id="btnReset" class="btn" onclick="kitirResetForm()">Kosongkan Form</button>
   <div id="msg"></div>
 </div>
@@ -111,6 +122,21 @@
     <button type="button" onclick="kitirCariUlang()">Cari</button>
   </div>
   <div id="ulangList"></div>
+</div>
+
+<div id="lihatPanel">
+  <div class="ul-head">
+    <b>Lihat EXT</b>
+    <button type="button" onclick="lePanelLihat()">Tutup ✕</button>
+  </div>
+  <div class="ul-cari">
+    <input type="date" id="leTgl">
+    <select id="leShift" style="flex:0 0 110px;padding:10px;border:1px solid var(--line);border-radius:7px;font-size:15px">
+      <option value="">Semua</option><option value="1">1</option><option value="2">2</option><option value="3">3</option>
+    </select>
+  </div>
+  <button type="button" class="btn" style="margin-top:0" onclick="leCari()">TAMPILKAN</button>
+  <div id="leBox" style="margin-top:8px"></div>
 </div>
 
 <div id="kitirPrintArea">
@@ -142,6 +168,7 @@ var kitirDraft=null;   // { sid, json } untuk retry, supaya tidak ganda
 var ulangCache=[];     // hasil cari carsheet untuk cetak ulang
 
 function esc(s){ return String(s===null||s===undefined?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function fmtN(n){ return Number(n||0).toLocaleString('id-ID',{maximumFractionDigits:2}); }
 
 var OPERATOR_LIST=['Agus','Edo','Singgih','Viky'];
 
@@ -409,6 +436,62 @@ function kitirCetakUlang(idx){
   if(!d.tanggal){ d.tanggal=(function(){ var n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0'); })(); }
   kitirIsiPreview(d,true);
   setTimeout(function(){ window.print(); }, 300);
+}
+
+// ===== LIHAT EXT: rekap per ukuran dan per TF (hanya membaca) =====
+
+function lePanelLihat(){
+  var p=document.getElementById('lihatPanel');
+  var buka = p.style.display!=='block';
+  p.style.display = buka ? 'block' : 'none';
+  if(buka){
+    var t=document.getElementById('leTgl');
+    if(!t.value) kitirSetDefaultTanggal(), t.value=document.getElementById('fTanggal').value;
+    p.scrollIntoView({behavior:'smooth'});
+  }
+}
+
+function leCari(){
+  var tgl=document.getElementById('leTgl').value, shift=document.getElementById('leShift').value;
+  var box=document.getElementById('leBox');
+  if(!tgl){ box.innerHTML='<div class="bad">Tanggal belum dipilih</div>'; return; }
+  box.innerHTML='Memuat...';
+  fetch(WEBAPP_URL+'?action=extFilter&tgl='+encodeURIComponent(tgl)+'&shift='+encodeURIComponent(shift))
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if(!res.ok){ box.innerHTML='<div class="bad">'+esc(res.error)+'</div>'; return; }
+      if(!res.items.length){ box.innerHTML='Tidak ada data.'; return; }
+
+      var grupUk={}, grupTf={}, grand=0;
+      res.items.forEach(function(it){
+        var uk=it.ukuran||'-', tf=it.untukTf||'-', b=Number(it.berat)||0;
+        if(!grupUk[uk]) grupUk[uk]={total:0, rows:[]};
+        if(!grupTf[tf]) grupTf[tf]={total:0, rows:[]};
+        grupUk[uk].total+=b; grupUk[uk].rows.push(it);
+        grupTf[tf].total+=b; grupTf[tf].rows.push(it);
+        grand+=b;
+      });
+
+      function daftar(it){
+        return '<div class="lh-item"><div class="a">'+esc(it.carsheet)+' | '+fmtN(it.berat)+' kg</div>'+
+          '<div class="b">'+esc(it.tanggalTxt)+' '+esc(it.jam)+' | Shift '+esc(it.shift)+
+          ' | EXT '+esc(it.ext)+' → '+esc(it.untukTf)+' | '+esc(it.nama)+'</div></div>';
+      }
+      function blok(judul, grup){
+        return '<div class="lh-card"><div class="jdl"><span>'+judul+'</span></div>'+
+          Object.keys(grup).sort().map(function(k){
+            return '<div class="lh-row" style="margin-top:6px"><b>'+esc(k)+'</b><b>'+fmtN(grup[k].total)+' kg</b></div>'+
+              grup[k].rows.map(daftar).join('');
+          }).join('')+'</div>';
+      }
+
+      box.innerHTML=
+        '<div class="lh-row"><span>Jumlah carsheet</span><b>'+res.items.length+'</b></div>'+
+        '<div class="lh-row"><span>Total berat</span><b>'+fmtN(grand)+' kg</b></div>'+
+        blok('Per Ukuran', grupUk)+
+        blok('Per TF', grupTf);
+    })
+    .catch(function(e){ box.innerHTML='<div class="bad">Gagal: '+esc(e.message)+'</div>'; });
 }
 
 // Saat halaman dibuka ulang, pulihkan status tersimpan dari browser
