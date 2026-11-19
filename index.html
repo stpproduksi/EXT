@@ -440,10 +440,11 @@ function leBuatTeks(tgl, shift, grup, grand, jumlah){
   var t='📊 LAPORAN EXT\nTanggal: '+kitirFmtTanggal(tgl)+' | Shift: '+(shift||'Semua')+'\n';
   Object.keys(grup).sort().forEach(function(ex){
     var g=grup[ex];
-    t+='\n'+ex+'  '+fmtN(g.total)+' kg\n';
+    var namaKR=Object.keys(g.nama).sort().join(', ')||'-';
+    t+='\n'+ex+'  '+fmtN(g.total)+' kg\nKR / Operator: '+namaKR+'\n';
     g.rows.forEach(function(it){
       t+=it.ukuran+' / '+fmtN(it.berat)+' kg\n'+
-        it.tanggalTxt+' '+it.jam+' | Shift '+it.shift+' | '+it.nama+'\n';
+        it.tanggalTxt+' '+it.jam+' | Shift '+it.shift+' | KR '+it.nama+'\n';
     });
   });
   t+='\nTOTAL  '+fmtN(grand)+' kg ('+jumlah+' carsheet)';
@@ -466,29 +467,41 @@ function leCari(){
       if(!res.ok){ box.innerHTML='<div class="bad">'+esc(res.error)+'</div>'; return; }
       if(!res.items.length){ box.innerHTML='Tidak ada data.'; return; }
 
-      var grup={}, grand=0;
+      var grup={}, grand=0, operator={};
       res.items.forEach(function(it){
         var ex='EXT '+(it.ext||'-'), b=Number(it.berat)||0;
-        if(!grup[ex]) grup[ex]={total:0, rows:[]};
+        if(!grup[ex]) grup[ex]={total:0, rows:[], nama:{}};
         grup[ex].total+=b;
         grup[ex].rows.push(it);
+        if(it.nama) grup[ex].nama[it.nama]=true;
+        if(it.nama) operator[it.nama]=(operator[it.nama]||0)+b;
         grand+=b;
       });
 
       var html=Object.keys(grup).sort().map(function(ex){
         var g=grup[ex];
+        var namaKR=Object.keys(g.nama).sort().join(', ')||'-';
         return '<div class="card" style="font-family:monospace">'+
-          '<div style="font-size:15px;font-weight:bold;margin-bottom:6px">'+esc(ex)+
+          '<div style="font-size:15px;font-weight:bold;margin-bottom:2px">'+esc(ex)+
           '&nbsp;&nbsp;&nbsp;'+fmtN(g.total)+' kg</div>'+
+          '<div style="font-size:12px;color:#5B6472;margin-bottom:6px">KR / Operator: '+esc(namaKR)+'</div>'+
           g.rows.map(function(it){
             return '<div style="margin-top:6px">'+
               esc(it.ukuran)+' / '+fmtN(it.berat)+' kg<br>'+
               '<small>'+esc(it.tanggalTxt)+' '+esc(it.jam)+
-              ' | Shift '+esc(it.shift)+' | '+esc(it.nama)+'</small>'+
+              ' | Shift '+esc(it.shift)+' | KR '+esc(it.nama)+'</small>'+
               '</div>';
           }).join('')+
           '</div>';
       }).join('');
+
+      var rekapOp=Object.keys(operator).sort().map(function(n){
+        return '<div class="lh-row"><span>'+esc(n)+'</span><b>'+fmtN(operator[n])+' kg</b></div>';
+      }).join('');
+
+      html+='<div class="card" style="font-family:monospace">'+
+        '<div style="font-weight:bold;margin-bottom:6px">Rekap per KR / Operator</div>'+
+        rekapOp+'</div>';
 
       html+='<div class="card" style="font-family:monospace;font-size:15px;font-weight:bold">'+
         'TOTAL&nbsp;&nbsp;&nbsp;'+fmtN(grand)+' kg<br>'+
