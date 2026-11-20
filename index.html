@@ -56,6 +56,8 @@
   #menuAtas .btn{ margin:0; flex:1; background:#1D4E89; color:#fff; border:none; opacity:.75; }
   #menuAtas .btn.on{ background:#F59E0B; color:#14181F; opacity:1; }
   #panelLihat .btn{ background:#1D4E89; color:#fff; border:none; }
+  .lh-row{ display:flex; justify-content:space-between; font-size:13px; padding:3px 0; }
+  .lh-row b{ font-family:'Roboto Mono',monospace; }
 
   #kitirPrintArea{ display:none; }
   .kitir{ width:54mm; margin:0; font-family:'Roboto Mono', monospace; color:#000; padding:0; }
@@ -491,19 +493,22 @@ function leShareWa(){
 }
 
 function leCari(){
-  var tgl=$('leTgl').value, shift=$('leShift').value;
-  var box=$('leBox');
+  var tgl=document.getElementById('leTgl').value, shift=document.getElementById('leShift').value;
+  var box=document.getElementById('leBox');
   if(!tgl){ box.innerHTML='<div class="bad">Tanggal belum dipilih</div>'; return; }
   box.innerHTML='Memuat...';
-  apiGet({action:'extFilter', tgl:tgl, shift:shift}).then(function(res){
-    if(!res.ok){ box.innerHTML='<div class="bad">'+esc(res.error)+'</div>'; return; }
-    if(!res.items.length){ box.innerHTML='Tidak ada data.'; return; }
-    var kr=leKelompok(res.items), grand=0;
-    res.items.forEach(function(it){ grand+=Number(it.berat)||0; });
-    leRekap=leBuatTeks(tgl, shift, kr, grand, res.items.length);
-    box.innerHTML=leHtml(kr, grand, res.items.length)+
-      '<button class="btn" style="background:#25D366" onclick="leShareWa()">Share WA</button>';
-  }).catch(function(e){ box.innerHTML='<div class="bad">Gagal: '+esc(e.message)+'</div>'; });
+  fetch(WEBAPP_URL+'?action=extFilter&tgl='+encodeURIComponent(tgl)+'&shift='+encodeURIComponent(shift))
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if(!res.ok){ box.innerHTML='<div class="bad">'+esc(res.error)+'</div>'; return; }
+      if(!res.items.length){ box.innerHTML='Tidak ada data.'; return; }
+      var kr=leKelompok(res.items), grand=0;
+      res.items.forEach(function(it){ grand+=Number(it.berat)||0; });
+      leRekap=leBuatTeks(tgl, shift, kr, grand, res.items.length);
+      box.innerHTML=leHtml(kr, grand, res.items.length)+
+        '<button class="btn" style="background:#25D366" onclick="leShareWa()">Share WA</button>';
+    })
+    .catch(function(e){ box.innerHTML='<div class="bad">Gagal: '+esc(e.message)+'</div>'; });
 }
 
 function kitirPulihkan(){
