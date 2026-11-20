@@ -436,19 +436,53 @@ function tabKitir(t){
   }
 }
 
-function leBuatTeks(tgl, shift, grup, grand, jumlah){
-  var t='📊 LAPORAN EXT\nTanggal: '+kitirFmtTanggal(tgl)+' | Shift: '+(shift||'Semua')+'\n';
-  Object.keys(grup).sort().forEach(function(ex){
-    var g=grup[ex];
-    var namaKR=Object.keys(g.nama).sort().join(', ')||'-';
-    t+='\n'+ex+'  '+fmtN(g.total)+' kg\nKR / Operator: '+namaKR+'\n';
-    g.rows.forEach(function(it){
-      t+=it.ukuran+' / '+fmtN(it.berat)+' kg\n'+
-        it.tanggalTxt+' '+it.jam+' | Shift '+it.shift+' | KR '+it.nama+'\n';
-    });
+function leKelompok(items){
+  var kr={};
+  items.forEach(function(it){
+    var n=it.nama||'-', g='EXT '+(it.ext||'-'), b=Number(it.berat)||0;
+    if(!kr[n]) kr[n]={total:0, count:0, grup:{}};
+    if(!kr[n].grup[g]) kr[n].grup[g]={total:0, rows:[]};
+    kr[n].total+=b; kr[n].count++;
+    kr[n].grup[g].total+=b; kr[n].grup[g].rows.push(it);
   });
-  t+='\nTOTAL  '+fmtN(grand)+' kg ('+jumlah+' carsheet)';
+  return kr;
+}
+
+function leBuatTeks(tgl, shift, kr, grand, jumlah){
+  var t='📊 LAPORAN EXT\nTanggal: '+kitirFmtTanggal(tgl)+' | Shift: '+(shift||'Semua')+'\n';
+  Object.keys(kr).sort().forEach(function(n){
+    var k=kr[n];
+    t+='\nKR '+n+'\nTOTAL '+fmtN(k.total)+' kg\n'+k.count+' carsheet\n';
+    Object.keys(k.grup).sort().forEach(function(g){
+      var gr=k.grup[g];
+      t+='\n'+g+'   '+fmtN(gr.total)+' kg\n';
+      gr.rows.forEach(function(it){ t+=it.ukuran+' / '+fmtN(it.berat)+' kg\n'; });
+    });
+    t+='\n';
+  });
+  t+='GRAND TOTAL '+fmtN(grand)+' kg ('+jumlah+' carsheet)';
   return t;
+}
+
+function leHtml(kr, grand, jumlah){
+  var h=Object.keys(kr).sort().map(function(n){
+    var k=kr[n];
+    var grp=Object.keys(k.grup).sort().map(function(g){
+      var gr=k.grup[g];
+      return '<div style="margin-top:8px"><b>'+esc(g)+'&nbsp;&nbsp;&nbsp;'+fmtN(gr.total)+' kg</b></div>'+
+        gr.rows.map(function(it){
+          return '<div>'+esc(it.ukuran)+' / '+fmtN(it.berat)+' kg</div>';
+        }).join('');
+    }).join('');
+    return '<div class="card" style="font-family:monospace">'+
+      '<div style="font-size:15px;font-weight:bold">KR '+esc(n)+'</div>'+
+      '<div style="font-weight:bold">TOTAL&nbsp;&nbsp;&nbsp;'+fmtN(k.total)+' kg</div>'+
+      '<div style="font-size:12px;color:#5B6472">'+k.count+' carsheet</div>'+
+      grp+'</div>';
+  }).join('');
+  return h+'<div class="card" style="font-family:monospace;font-size:15px;font-weight:bold">'+
+    'GRAND TOTAL&nbsp;&nbsp;&nbsp;'+fmtN(grand)+' kg<br>'+
+    '<small style="font-weight:normal">'+jumlah+' carsheet</small></div>';
 }
 
 function leShareWa(){
@@ -457,62 +491,19 @@ function leShareWa(){
 }
 
 function leCari(){
-  var tgl=document.getElementById('leTgl').value, shift=document.getElementById('leShift').value;
-  var box=document.getElementById('leBox');
+  var tgl=$('leTgl').value, shift=$('leShift').value;
+  var box=$('leBox');
   if(!tgl){ box.innerHTML='<div class="bad">Tanggal belum dipilih</div>'; return; }
   box.innerHTML='Memuat...';
-  fetch(WEBAPP_URL+'?action=extFilter&tgl='+encodeURIComponent(tgl)+'&shift='+encodeURIComponent(shift))
-    .then(function(r){ return r.json(); })
-    .then(function(res){
-      if(!res.ok){ box.innerHTML='<div class="bad">'+esc(res.error)+'</div>'; return; }
-      if(!res.items.length){ box.innerHTML='Tidak ada data.'; return; }
-
-      var grup={}, grand=0, operator={};
-      res.items.forEach(function(it){
-        var ex='EXT '+(it.ext||'-'), b=Number(it.berat)||0;
-        if(!grup[ex]) grup[ex]={total:0, rows:[], nama:{}};
-        grup[ex].total+=b;
-        grup[ex].rows.push(it);
-        if(it.nama) grup[ex].nama[it.nama]=true;
-        if(it.nama) operator[it.nama]=(operator[it.nama]||0)+b;
-        grand+=b;
-      });
-
-      var html=Object.keys(grup).sort().map(function(ex){
-        var g=grup[ex];
-        var namaKR=Object.keys(g.nama).sort().join(', ')||'-';
-        return '<div class="card" style="font-family:monospace">'+
-          '<div style="font-size:15px;font-weight:bold;margin-bottom:2px">'+esc(ex)+
-          '&nbsp;&nbsp;&nbsp;'+fmtN(g.total)+' kg</div>'+
-          '<div style="font-size:12px;color:#5B6472;margin-bottom:6px">KR / Operator: '+esc(namaKR)+'</div>'+
-          g.rows.map(function(it){
-            return '<div style="margin-top:6px">'+
-              esc(it.ukuran)+' / '+fmtN(it.berat)+' kg<br>'+
-              '<small>'+esc(it.tanggalTxt)+' '+esc(it.jam)+
-              ' | Shift '+esc(it.shift)+' | KR '+esc(it.nama)+'</small>'+
-              '</div>';
-          }).join('')+
-          '</div>';
-      }).join('');
-
-      var rekapOp=Object.keys(operator).sort().map(function(n){
-        return '<div class="lh-row"><span>'+esc(n)+'</span><b>'+fmtN(operator[n])+' kg</b></div>';
-      }).join('');
-
-      html+='<div class="card" style="font-family:monospace">'+
-        '<div style="font-weight:bold;margin-bottom:6px">Rekap per KR / Operator</div>'+
-        rekapOp+'</div>';
-
-      html+='<div class="card" style="font-family:monospace;font-size:15px;font-weight:bold">'+
-        'TOTAL&nbsp;&nbsp;&nbsp;'+fmtN(grand)+' kg<br>'+
-        '<small style="font-weight:normal">'+res.items.length+' carsheet</small></div>';
-
-      leRekap=leBuatTeks(tgl, shift, grup, grand, res.items.length);
-      html+='<button class="btn" style="background:#25D366" onclick="leShareWa()">Share WA</button>';
-
-      box.innerHTML=html;
-    })
-    .catch(function(e){ box.innerHTML='<div class="bad">Gagal: '+esc(e.message)+'</div>'; });
+  apiGet({action:'extFilter', tgl:tgl, shift:shift}).then(function(res){
+    if(!res.ok){ box.innerHTML='<div class="bad">'+esc(res.error)+'</div>'; return; }
+    if(!res.items.length){ box.innerHTML='Tidak ada data.'; return; }
+    var kr=leKelompok(res.items), grand=0;
+    res.items.forEach(function(it){ grand+=Number(it.berat)||0; });
+    leRekap=leBuatTeks(tgl, shift, kr, grand, res.items.length);
+    box.innerHTML=leHtml(kr, grand, res.items.length)+
+      '<button class="btn" style="background:#25D366" onclick="leShareWa()">Share WA</button>';
+  }).catch(function(e){ box.innerHTML='<div class="bad">Gagal: '+esc(e.message)+'</div>'; });
 }
 
 function kitirPulihkan(){
