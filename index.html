@@ -52,10 +52,10 @@
   .ul-item button{ margin-top:6px; width:100%; padding:9px; border:none; border-radius:7px; background:#B45309; color:#fff; font-weight:700; font-size:13px; cursor:pointer; }
 
   .card{ background:#fff; border-radius:12px; padding:12px; margin:8px 0; box-shadow:0 1px 3px #0002; }
-  #menuAtas{ max-width:420px; margin-bottom:12px; }
-  #menuAtas .btn{ margin:0; flex:1; background:#1D4E89; color:#fff; border:none; opacity:.75; }
+  #menuAtas{ max-width:420px; margin-bottom:12px; flex-wrap:wrap; }
+  #menuAtas .btn{ margin:0; flex:1 1 30%; background:#1D4E89; color:#fff; border:none; opacity:.75; }
   #menuAtas .btn.on{ background:#F59E0B; color:#14181F; opacity:1; }
-  #panelLihat .btn, #panelEdit .btn{ background:#1D4E89; color:#fff; border:none; }
+  #panelLihat .btn, #panelEdit .btn, #panelHapus .btn{ background:#1D4E89; color:#fff; border:none; }
   .lh-row{ display:flex; justify-content:space-between; font-size:13px; padding:3px 0; }
   .lh-row b{ font-family:'Roboto Mono',monospace; }
 
@@ -108,6 +108,7 @@
   <button id="tabForm" class="btn" onclick="tabKitir('form')">Input Hasil</button>
   <button id="tabLihat" class="btn" onclick="tabKitir('lihat')">Rincian Hasil</button>
   <button id="tabEdit" class="btn" onclick="tabKitir('edit')">Edit EXT</button>
+  <button id="tabHapus" class="btn" onclick="tabKitir('hapus')">Hapus EXT</button>
 </div>
 
 <!-- RINCIAN HASIL -->
@@ -156,6 +157,19 @@
     <button class="btn" style="background:#fff;color:#5B6472;border:1px solid #E3E6EA" onclick="edBatal()">Batal</button>
     <div id="edMsg" style="margin-top:8px;font-size:13px"></div>
   </div>
+</div>
+
+<!-- HAPUS EXT -->
+<div id="panelHapus" class="card" style="display:none;max-width:420px">
+  <div class="row2">
+    <div class="field" style="margin:0"><label>Tanggal</label><input type="date" id="hpTgl"></div>
+    <div class="field" style="margin:0"><label>Shift</label>
+      <select id="hpShift"><option value="">Semua</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
+    </div>
+  </div>
+  <button class="btn" style="margin-top:10px" onclick="hpTampil()">TAMPILKAN</button>
+  <div id="hpMsg" style="margin-top:8px;font-size:13px"></div>
+  <div id="hpList" style="margin-top:8px"></div>
 </div>
 
 <!-- INPUT HASIL -->
@@ -225,6 +239,7 @@ var ulangCache=[];
 var leRekap='';
 var UKURAN_LIST=[];
 var EDIT_CACHE=[];
+var HAPUS_CACHE=[];
 var OPERATOR_LIST=['Agus','Edo','Singgih','Viky'];
 
 function $(id){ return document.getElementById(id); }
@@ -250,6 +265,7 @@ function masukPin(){
     $('tabForm').style.display = MENU_USER.indexOf('ext')>=0 ? '' : 'none';
     $('tabLihat').style.display = MENU_USER.indexOf('ext')>=0 ? '' : 'none';
     $('tabEdit').style.display = MENU_USER.indexOf('editext')>=0 ? '' : 'none';
+    $('tabHapus').style.display = MENU_USER.indexOf('hapusext')>=0 ? '' : 'none';
     $('login').style.display='none';
     $('pin').value='';
     $('login_msg').textContent='';
@@ -261,16 +277,19 @@ function masukPin(){
 /* ===== MENU ===== */
 
 function tabKitir(t){
-  var form=t==='form', lihat=t==='lihat', edit=t==='edit';
+  var form=t==='form', lihat=t==='lihat', edit=t==='edit', hapus=t==='hapus';
   $('formCard').style.display = form ? '' : 'none';
   $('ulangPanel').style.display = 'none';
   $('panelLihat').style.display = lihat ? 'block' : 'none';
   $('panelEdit').style.display = edit ? 'block' : 'none';
+  $('panelHapus').style.display = hapus ? 'block' : 'none';
   $('tabForm').classList.toggle('on', form);
   $('tabLihat').classList.toggle('on', lihat);
   $('tabEdit').classList.toggle('on', edit);
+  $('tabHapus').classList.toggle('on', hapus);
   if(lihat && !$('leTgl').value) $('leTgl').value=$('fTanggal').value;
   if(edit && !$('edTgl').value) $('edTgl').value=$('fTanggal').value;
+  if(hapus && !$('hpTgl').value) $('hpTgl').value=$('fTanggal').value;
 }
 
 /* ===== FORM OPERATOR & UKURAN ===== */
@@ -647,6 +666,45 @@ function edSimpan(){
       msg.className='ok'; msg.textContent='✅ Perubahan tersimpan.';
       $('edForm').style.display='none';
       edTampil();
+    }else{
+      msg.className='bad'; msg.textContent='❌ Gagal: '+(res.error||'tidak diketahui');
+    }
+  }).catch(function(e){ msg.className='bad'; msg.textContent='❌ Gagal: '+e.message; });
+}
+
+/* ===== HAPUS EXT ===== */
+
+function hpTampil(){
+  var tgl=$('hpTgl').value, shift=$('hpShift').value;
+  var box=$('hpList');
+  $('hpMsg').textContent='';
+  if(!tgl){ box.innerHTML='<div class="bad">Tanggal belum dipilih</div>'; return; }
+  box.innerHTML='Memuat...';
+  apiGet({action:'extEditList', tgl:tgl, shift:shift}).then(function(res){
+    if(!res.ok){ box.innerHTML='<div class="bad">'+esc(res.error)+'</div>'; return; }
+    HAPUS_CACHE=res.items||[];
+    if(!HAPUS_CACHE.length){ box.innerHTML='Tidak ada data.'; return; }
+    box.innerHTML=HAPUS_CACHE.map(function(it,idx){
+      return '<div class="ul-item">'+
+        '<div class="t">'+esc(it.carsheet)+' | '+esc(it.ukuran)+' | '+fmtN(it.berat)+' kg</div>'+
+        '<div class="s">EXT '+esc(it.ext)+' → '+esc(it.untukTf)+' | '+esc(it.tanggalTxt)+' '+esc(it.jam)+' | Shift '+esc(it.shift)+'</div>'+
+        '<div class="s">KR: '+esc(it.nama)+'</div>'+
+        '<button type="button" style="background:#B91C1C" onclick="hpHapus('+idx+')">🗑 Hapus</button>'+
+        '</div>';
+    }).join('');
+  }).catch(function(e){ box.innerHTML='<div class="bad">Gagal: '+esc(e.message)+'</div>'; });
+}
+
+function hpHapus(idx){
+  var it=HAPUS_CACHE[idx];
+  if(!it) return;
+  if(!confirm('Hapus data carsheet '+it.carsheet+' ('+it.ukuran+', '+fmtN(it.berat)+' kg)? Data tidak bisa dikembalikan.')) return;
+  var msg=$('hpMsg');
+  msg.className=''; msg.textContent='Menghapus...';
+  apiGet({action:'extHapus', payload:JSON.stringify({row:it.row, carsheet:it.carsheet})}).then(function(res){
+    if(res.ok){
+      msg.className='ok'; msg.textContent='✅ Data dihapus.';
+      hpTampil();
     }else{
       msg.className='bad'; msg.textContent='❌ Gagal: '+(res.error||'tidak diketahui');
     }
