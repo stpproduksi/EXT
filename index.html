@@ -253,7 +253,7 @@ function masukPin(){
     $('login').style.display='none';
     $('pin').value='';
     $('login_msg').textContent='';
-    tabKitir(MENU_USER.indexOf('ext')>=0 ? 'form' : 'edit');
+    tabKitir(MENU_USER.indexOf('ext')>=0 ? 'lihat' : 'edit');
     kitirMuatDaftarUkuran();
   }).catch(function(e){ KEY=''; $('login_msg').textContent='Gagal: '+e.message; });
 }
