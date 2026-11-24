@@ -30,6 +30,7 @@
   .btn:disabled{ opacity:.5; cursor:not-allowed; }
   #btnSave{ margin-top:4px; }
   #btnPrint{ background:#B45309; }
+  #btnPrinter{ background:#0F766E; }
   #btnShareWA{ background:#25D366; }
   #btnUlang{ background:#fff; color:var(--accent); border:1px solid var(--accent); }
   #btnReset{ background:#fff; color:var(--mute); border:1px solid var(--line); font-size:12.5px; padding:10px; }
@@ -187,6 +188,7 @@
   <div class="field"><label>Nama Operator</label><select id="fNama"></select></div>
   <div class="field"><label>Berat (kg)</label><input type="number" id="fBerat" step="0.01" inputmode="decimal" placeholder="0,00"></div>
 
+  <button id="btnPrinter" class="btn" onclick="pilihPrinter()">🔵 Pilih Printer Bluetooth</button>
   <button id="btnSave" class="btn" onclick="kitirSimpan()">Simpan</button>
   <button id="btnPrint" class="btn" onclick="kitirCetak()" disabled>Cetak</button>
   <button id="btnShareWA" class="btn" onclick="kitirShareWA()" disabled>Share WA</button>
@@ -442,11 +444,139 @@ function kitirSimpan(){
   });
 }
 
+/* ===== PRINT BARU - WEB BLUETOOTH + AUTO SAMBUNG ===== */
+
+function kitirBuatRawText(d, ulang){
+  var berat = Number(d.berat).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2});
+  var tgl = kitirFmtTanggal(d.tanggal)+' '+d.jam;
+  return "STP\n" +
+    "KITIR SHEET\n" +
+    (ulang ? "** CETAK ULANG **\n" : "") +
+    "No. Carsheet: "+d.carsheet+"\n" +
+    "--------------------------------\n" +
+    d.ukuran+"\n" +
+    "BERAT\n" +
+    berat+" kg\n" +
+    "EXT "+d.ext+" -> "+d.untukTf+"\n" +
+    "--------------------------------\n" +
+    tgl+"  SHIFT "+d.shift+"\n" +
+    "Operator: "+d.nama+"\n" +
+    d.carsheet+"\n" +
+    "\n\n\n";
+}
+
+var printerDevice = null;
+var printerCharacteristic = null;
+
+async function pilihPrinter(){
+  var msgEl=$('msg');
+  if(!navigator.bluetooth){
+    msgEl.textContent='HP / browser ini tidak dukung Web Bluetooth. Buka lewat Chrome Android.';
+    msgEl.className='bad';
+    return;
+  }
+  try{
+    msgEl.textContent='Mencari printer...'; msgEl.className='';
+    printerDevice = await navigator.bluetooth.requestDevice({
+      acceptAllDevices: true,
+      optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb','0000ff00-0000-1000-8000-00805f9b34fb','0000ffe0-0000-1000-8000-00805f9b34fb']
+    });
+    var server = await printerDevice.gatt.connect();
+    var services = await server.getPrimaryServices();
+    printerCharacteristic = null;
+    for(var s of services){
+      var chars = await s.getCharacteristics();
+      for(var c of chars){
+        if(c.properties.write || c.properties.writeWithoutResponse){
+          printerCharacteristic = c;
+          break;
+        }
+      }
+      if(printerCharacteristic) break;
+    }
+    if(!printerCharacteristic) throw new Error('Characteristic print tidak ketemu di printer ini');
+    printerDevice.addEventListener('gattserverdisconnected', function(){ printerCharacteristic=null; });
+    msgEl.textContent='Printer tersambung: ' + printerDevice.name;
+    msgEl.className='ok';
+  }catch(e){
+    msgEl.textContent='Gagal pilih printer: ' + e.message;
+    msgEl.className='bad';
+  }
+}
+
+async function autoSambungPrinter(){
+  try{
+    if(!navigator.bluetooth || !navigator.bluetooth.getDevices) return false;
+    var devices = await navigator.bluetooth.getDevices();
+    if(!devices.length) return false;
+    printerDevice = devices[0];
+    var server = await printerDevice.gatt.connect();
+    var services = await server.getPrimaryServices();
+    printerCharacteristic = null;
+    for(var s of services){
+      var chars = await s.getCharacteristics();
+      for(var c of chars){
+        if(c.properties.write || c.properties.writeWithoutResponse){
+          printerCharacteristic = c;
+          break;
+        }
+      }
+      if(printerCharacteristic) break;
+    }
+    if(printerCharacteristic){
+      printerDevice.addEventListener('gattserverdisconnected', function(){ printerCharacteristic=null; });
+      if($('msg')){ $('msg').textContent='Printer otomatis tersambung: ' + printerDevice.name; $('msg').className='ok'; }
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+
+function teksKeESCpos(teks){
+  var enc = new TextEncoder();
+  var data = enc.encode(teks);
+  var out = new Uint8Array(2 + data.length + 3);
+  out[0]=0x1B; out[1]=0x40;
+  out.set(data, 2);
+  out[2+data.length]=0x0A; out[3+data.length]=0x0A; out[4+data.length]=0x0A;
+  return out;
+}
+
+async function kirimKePrinter(d, ulang){
+  var msgEl=$('msg');
+  var teks = kitirBuatRawText(d, ulang);
+  if(!printerCharacteristic){
+    await autoSambungPrinter();
+  }
+  if(printerCharacteristic && printerDevice && printerDevice.gatt.connected){
+    try{
+      var bytes = teksKeESCpos(teks);
+      for(var i=0;i<bytes.length;i+=20){
+        await printerCharacteristic.writeValueWithoutResponse(bytes.slice(i, i+20));
+        await new Promise(function(r){ setTimeout(r, 30); });
+      }
+      if(msgEl){ msgEl.textContent='Terkirim ke printer.'; msgEl.className='ok'; }
+      return;
+    }catch(e){
+      if(msgEl){ msgEl.textContent='Gagal print: ' + e.message + ' - Pilih printer lagi.'; msgEl.className='bad'; }
+      printerCharacteristic = null;
+      return;
+    }
+  }
+  if(navigator.bluetooth){
+    if(msgEl){ msgEl.textContent='Pilih printer dulu di tombol biru.'; msgEl.className='bad'; }
+    await pilihPrinter();
+    if(printerCharacteristic){ kirimKePrinter(d, ulang); }
+    return;
+  }
+  kitirIsiPreview(d, ulang);
+  setTimeout(function(){ window.print(); }, 300);
+}
+
 function kitirCetak(){
   var msgEl=$('msg');
   if(!kitirState){ msgEl.textContent='Belum ada data tersimpan.'; msgEl.className='bad'; return; }
-  kitirIsiPreview(kitirState.data,false);
-  setTimeout(function(){ window.print(); }, 300);
+  kirimKePrinter(kitirState.data, false);
 }
 
 function kitirShareWA(){
@@ -521,8 +651,7 @@ function kitirCetakUlang(idx){
     nama: it.nama,
     carsheet: it.carsheet
   };
-  kitirIsiPreview(d,true);
-  setTimeout(function(){ window.print(); }, 300);
+  kirimKePrinter(d, true);
 }
 
 /* ===== RINCIAN HASIL ===== */
