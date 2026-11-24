@@ -444,7 +444,7 @@ function kitirSimpan(){
   });
 }
 
-/* ===== PRINT BARU - WEB BLUETOOTH + AUTO SAMBUNG ===== */
+/* ===== PRINT BARU - WEB BLUETOOTH + AUTO SAMBUNG + BARCODE ===== */
 
 function kitirBuatRawText(d, ulang){
   var berat = Number(d.berat).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -461,8 +461,7 @@ function kitirBuatRawText(d, ulang){
     "--------------------------------\n" +
     tgl+"  SHIFT "+d.shift+"\n" +
     "Operator: "+d.nama+"\n" +
-    d.carsheet+"\n" +
-    "\n\n\n";
+    "\n";
 }
 
 var printerDevice = null;
@@ -532,25 +531,37 @@ async function autoSambungPrinter(){
   return false;
 }
 
-function teksKeESCpos(teks){
+function buildPrintBytes(d, ulang){
+  var teks = kitirBuatRawText(d, ulang);
   var enc = new TextEncoder();
-  var data = enc.encode(teks);
-  var out = new Uint8Array(2 + data.length + 3);
-  out[0]=0x1B; out[1]=0x40;
-  out.set(data, 2);
-  out[2+data.length]=0x0A; out[3+data.length]=0x0A; out[4+data.length]=0x0A;
+  var teksBytes = enc.encode(teks);
+  var code = String(d.carsheet).trim();
+  // Setting barcode: rata tengah, tinggi 60, lebar 2, tampilkan angka di bawah
+  // ESC a 1 = rata tengah, GS h 60 = tinggi, GS w 2 = lebar, GS H 2 = angka di bawah
+  var setting = new Uint8Array([0x1B,0x61,0x01, 0x1D,0x68,60, 0x1D,0x77,2, 0x1D,0x48,2]);
+  // Perintah barcode CODE128: GS k 73 panjang + data + NUL
+  var barcodeHead = new Uint8Array([0x1D,0x6B,0x49, code.length]);
+  var barcodeData = enc.encode(code);
+  var barcodeTail = new Uint8Array([0x00, 0x1B,0x61,0x00, 0x0A,0x0A,0x0A]);
+  var out = new Uint8Array(2 + teksBytes.length + setting.length + barcodeHead.length + barcodeData.length + barcodeTail.length);
+  var p = 0;
+  out[p++]=0x1B; out[p++]=0x40;
+  out.set(teksBytes, p); p += teksBytes.length;
+  out.set(setting, p); p += setting.length;
+  out.set(barcodeHead, p); p += barcodeHead.length;
+  out.set(barcodeData, p); p += barcodeData.length;
+  out.set(barcodeTail, p);
   return out;
 }
 
 async function kirimKePrinter(d, ulang){
   var msgEl=$('msg');
-  var teks = kitirBuatRawText(d, ulang);
   if(!printerCharacteristic){
     await autoSambungPrinter();
   }
   if(printerCharacteristic && printerDevice && printerDevice.gatt.connected){
     try{
-      var bytes = teksKeESCpos(teks);
+      var bytes = buildPrintBytes(d, ulang);
       for(var i=0;i<bytes.length;i+=20){
         await printerCharacteristic.writeValueWithoutResponse(bytes.slice(i, i+20));
         await new Promise(function(r){ setTimeout(r, 30); });
