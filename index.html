@@ -192,6 +192,7 @@
   <button id="btnPrint" class="btn" onclick="kitirCetak()" disabled>Cetak</button>
   <button id="btnShareWA" class="btn" onclick="kitirShareWA()" disabled>Share WA</button>
   <button id="btnUlang" class="btn" onclick="kitirBukaUlang()">Cari Cetak Ulang</button>
+  <button id="btnRiwayat" class="btn" style="background:#fff;color:#1D4E89;border:1px solid #1D4E89" onclick="kitirTampilRiwayat()">Riwayat Simpan (Share Ulang)</button>
   <button id="btnReset" class="btn" onclick="kitirResetForm()">Kosongkan Form</button>
   <div id="msg"></div>
 </div>
@@ -425,6 +426,7 @@ function kitirSimpan(){
   apiGet({action:'save', payload:JSON.stringify(data)}).then(function(res){
     if(res&&res.ok){
       kitirState={data:data, sid:sid};
+      kitirRiwayatTambah(data);
       kitirDraft=null;
       try{ localStorage.setItem(KITIR_KEY, JSON.stringify(kitirState)); }catch(e){}
       kitirIsiPreview(data,false);
@@ -594,6 +596,38 @@ function kitirShareWA(){
   if(!kitirState){ msgEl.textContent='Simpan dulu.'; msgEl.className='bad'; return; }
   kitirShareKeWA(kitirBuatPesanWA_TextBiasa(kitirState.data));
   msgEl.textContent='WhatsApp dibuka. Data masih ada di form.'; msgEl.className='ok';
+}
+
+  var KITIR_RIWAYAT_KEY='kitirRiwayat';
+
+function kitirRiwayatBaca(){
+  try{ return JSON.parse(localStorage.getItem(KITIR_RIWAYAT_KEY)||'[]'); }catch(e){ return []; }
+}
+
+function kitirRiwayatTambah(d){
+  var list=kitirRiwayatBaca();
+  list.unshift(d);
+  if(list.length>30) list=list.slice(0,30);
+  try{ localStorage.setItem(KITIR_RIWAYAT_KEY, JSON.stringify(list)); }catch(e){}
+}
+
+function kitirTampilRiwayat(){
+  var list=kitirRiwayatBaca();
+  var box=$('ulangList');
+  $('ulangPanel').style.display='block';
+  if(!list.length){ box.innerHTML='Belum ada riwayat.'; return; }
+  box.innerHTML=list.map(function(d,i){
+    return '<div class="ul-item"><div class="t">'+esc(d.carsheet)+'</div>'+
+      '<div class="s">'+esc(d.ukuran)+' | '+esc(d.berat)+' kg</div>'+
+      '<div class="s">EXT '+esc(d.ext)+' → '+esc(d.untukTf)+' | '+esc(d.tanggal)+' '+esc(d.jam)+'</div>'+
+      '<button type="button" style="background:#25D366" onclick="kitirShareRiwayat('+i+')">Share WA</button></div>';
+  }).join('');
+}
+
+function kitirShareRiwayat(idx){
+  var d=kitirRiwayatBaca()[idx];
+  if(!d) return;
+  kitirShareKeWA(kitirBuatPesanWA_TextBiasa(d));
 }
 
 function kitirResetForm(){
