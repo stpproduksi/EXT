@@ -126,7 +126,8 @@
   <button class="btn" onclick="stokMuat(true)">Muat Ulang</button>
   <div id="stkUpd" style="font-size:12px;color:#5B6472;margin:8px 0"></div>
   <div id="stkGrand"></div>
-  <button id="stkWa" class="btn" style="background:#25D366" onclick="stokShareGambar()" disabled>Share WA (Gambar)</button>
+  <button id="stkWa" class="btn" style="background:#25D366" onclick="stokShareTeks()" disabled>Share WA (Teks)</button>
+  <div id="stkShareList" style="margin-top:10px"></div>
   <div id="stkList" style="margin-top:8px"></div>
 </div>
 
@@ -919,76 +920,41 @@ function stokMuat(force){
       }
     });
 }
-function stokBuatGambar(res, groups){
-  var SCALE = 2;
-  var W=600, pad=28;
-  var headH=96;
-  var groupHeadH=76, tableHeadH=36, rowH=36, gap=16, footH=64;
-  var list = groups || res.groups;
-  var H=headH+10;
-  list.forEach(function(g){
-    H += groupHeadH + tableHeadH + (g.rows.length * rowH) + gap;
-  });
-  H += footH + 20;
-  var c=document.createElement('canvas'); c.width=W*SCALE; c.height=H*SCALE;
-  var ctx=c.getContext('2d');
-  ctx.scale(SCALE, SCALE);
-  ctx.fillStyle='#FFFFFF'; ctx.fillRect(0,0,W,H);
-  ctx.fillStyle='#1D4E89'; ctx.fillRect(0,0,W,96);
-  ctx.fillStyle='#FFFFFF';
-  ctx.font='800 26px Arial, Helvetica, sans-serif'; ctx.fillText('REKAP STOK PER UKURAN', pad, 46);
-  ctx.font='14px Arial, Helvetica, sans-serif'; ctx.fillText('STP LAWANG  |  '+res.updatedAt, pad, 74);
-  var y=headH+10;
-  var totalRoll=0;
-  var totalBerat=0;
-  list.forEach(function(g){
+// === STOK SHARE WA TEKS ===
+function stokBuatTeks(chunk, isSemua){
+  var teks = "REKAP STOK PER UKURAN\n";
+  teks += "STP LAWANG  |  " + STOK_DATA.updatedAt + "\n";
+  teks += "------------------------------\n";
+  var totalRoll = 0;
+  var totalBerat = 0;
+  chunk.forEach(function(g){
     totalRoll += g.rows.length;
     totalBerat += g.total;
-    ctx.fillStyle='#FFFFFF'; ctx.fillRect(pad, y, W-pad*2, groupHeadH);
-    ctx.strokeStyle='#E3E6EA'; ctx.lineWidth=1;
-    ctx.strokeRect(pad, y, W-pad*2, groupHeadH);
-    ctx.fillStyle='#14181F';
-    ctx.font='800 19px Arial, Helvetica, sans-serif';
-    ctx.fillText(g.ukuran, pad+14, y+30);
-    ctx.fillStyle='#5B6472'; ctx.font='400 14px Arial, Helvetica, sans-serif';
-    ctx.fillText(g.rows.length+' roll', pad+14, y+54);
-    ctx.fillStyle='#1D4E89'; ctx.textAlign='right'; ctx.font='800 19px "Courier New", monospace';
-    ctx.fillText(fmtN(g.total), W-pad-14, y+38); ctx.textAlign='left';
-    y += groupHeadH;
-    ctx.fillStyle='#EEF2F7'; ctx.fillRect(pad, y, W-pad*2, tableHeadH);
-    ctx.strokeRect(pad, y, W-pad*2, tableHeadH);
-    ctx.fillStyle='#5B6472'; ctx.font='700 13px Arial, Helvetica, sans-serif';
-    ctx.fillText('NO. CARSHEET', pad+14, y+23);
-    ctx.textAlign='right'; ctx.fillText('BERAT', W-pad-14, y+23); ctx.textAlign='left';
-    y += tableHeadH;
-    g.rows.forEach(function(r, idx){
-      if(idx%2===1){ ctx.fillStyle='#F7F8FA'; ctx.fillRect(pad, y, W-pad*2, rowH); }
-      ctx.strokeStyle='#E3E6EA'; ctx.strokeRect(pad, y, W-pad*2, rowH);
-      ctx.fillStyle='#14181F'; ctx.font='400 16px Arial, Helvetica, sans-serif';
-      ctx.fillText(String(r.carsheet), pad+14, y+24);
-      ctx.textAlign='right'; ctx.font='400 16px "Courier New", monospace';
-      ctx.fillText(fmtN(r.berat), W-pad-14, y+24); ctx.textAlign='left';
-      y += rowH;
+    teks += "\n" + g.ukuran + "\n";
+    teks += g.rows.length + " Roll - " + fmtN(g.total) + " kg\n";
+    g.rows.forEach(function(r){
+      teks += r.carsheet + " | " + fmtN(r.berat) + "\n";
     });
-    y += gap;
   });
-  ctx.fillStyle='#1D4E89'; ctx.fillRect(0,y,W,footH);
-  ctx.fillStyle='#FFFFFF'; ctx.font='800 18px Arial, Helvetica, sans-serif';
-  ctx.fillText(groups ? 'SUBTOTAL' : 'TOTAL KESELURUHAN', pad, y+28);
-  ctx.font='400 13px Arial, Helvetica, sans-serif';
-  ctx.fillText(totalRoll+' Roll', pad, y+48);
-  ctx.textAlign='right'; ctx.font='800 20px "Courier New", monospace';
-  ctx.fillText(fmtN(totalBerat)+' kg', W-pad, y+40); ctx.textAlign='left';
-  return c;
+  teks += "\n------------------------------\n";
+  teks += (isSemua ? "TOTAL KESELURUHAN" : "SUBTOTAL") + "\n";
+  teks += totalRoll + " Roll - " + fmtN(totalBerat) + " kg";
+  return teks;
 }
-function stokShareGambar(){
+function stokShareTeks(){
   if(!STOK_DATA||!STOK_DATA.groups||!STOK_DATA.groups.length){ alert('Data belum dimuat.'); return; }
-  var MAX_BARIS_PER_GAMBAR = 25;
+  $('stkShareList').innerHTML = '';
+  var teksSemua = stokBuatTeks(STOK_DATA.groups, true);
+  if(teksSemua.length <= 3500){
+    window.open("https://wa.me/?text=" + encodeURIComponent(teksSemua), "_blank");
+    return;
+  }
+  var MAX_BARIS_PER_PESAN = 25;
   var chunks = [];
   var cur = [];
   var curBaris = 0;
   STOK_DATA.groups.forEach(function(g){
-    if(cur.length > 0 && (curBaris + g.rows.length) > MAX_BARIS_PER_GAMBAR){
+    if(cur.length > 0 && (curBaris + g.rows.length) > MAX_BARIS_PER_PESAN){
       chunks.push(cur);
       cur = [];
       curBaris = 0;
@@ -997,34 +963,22 @@ function stokShareGambar(){
     curBaris += g.rows.length;
   });
   if(cur.length) chunks.push(cur);
-  var i = 0;
-  function kirimBerikutnya(){
-    if(i >= chunks.length) return;
-    var chunk = chunks[i];
-    i++;
-    var canvas = stokBuatGambar(STOK_DATA, chunk);
-    canvas.toBlob(function(blob){
-      if(!blob){ kirimBerikutnya(); return; }
-      var namaUkuran = chunk.map(function(g){ return g.ukuran; }).join('_').replace(/[^A-Za-z0-9]+/g,'_');
-      var namaFile = 'stok_'+namaUkuran+'.png';
-      var file = new File([blob], namaFile, {type:'image/png'});
-      if(navigator.canShare && navigator.canShare({files:[file]})){
-        navigator.share({files:[file], title:'Stok', text:'Stok : '+chunk.map(function(g){ return g.ukuran; }).join(', ')})
-          .then(function(){ setTimeout(kirimBerikutnya, 800); })
-          .catch(function(err){
-            if(err && err.name!=='AbortError') alert('Gagal share: '+err.message);
-            setTimeout(kirimBerikutnya, 800);
-          });
-      } else {
-        var url=URL.createObjectURL(blob);
-        var a=document.createElement('a'); a.href=url; a.download=namaFile;
-        document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
-        setTimeout(kirimBerikutnya, 800);
-      }
-    }, 'image/png', 0.95);
-  }
-  kirimBerikutnya();
+  window.STOK_CHUNKS_TEKS = chunks;
+  var box = $('stkShareList');
+  var html = '<div style="font-size:13px;font-weight:700;margin-bottom:8px">Teks terlalu panjang, dibagi jadi '+chunks.length+' pesan:</div>';
+  chunks.forEach(function(chunk, idx){
+    var nama = chunk.map(function(g){ return g.ukuran; }).join(', ');
+    html += '<button class="btn" style="background:#25D366;margin-top:0;margin-bottom:8px" onclick="stokKirimTeks('+idx+')">📤 Kirim Pesan '+(idx+1)+' - '+nama+'</button>';
+  });
+  html += '<button class="btn" style="background:#fff;color:#5B6472;border:1px solid #E3E6EA;margin-top:0" onclick="$(\'stkShareList\').innerHTML=\'\'">Tutup</button>';
+  box.innerHTML = html;
+  box.scrollIntoView({behavior:'smooth'});
+}
+function stokKirimTeks(idx){
+  var chunk = window.STOK_CHUNKS_TEKS[idx];
+  if(!chunk) return;
+  var teks = stokBuatTeks(chunk, false);
+  window.open("https://wa.me/?text=" + encodeURIComponent(teks), "_blank");
 }
 function kitirPulihkan(){
   var raw=null;
