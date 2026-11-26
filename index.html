@@ -936,7 +936,7 @@ function stokMuat(){
         return;
       }
       STOK_DATA=res;
-      $('stkUpd').textContent='Diperbarui: '+res.updatedAt+' | '+res.jumlahBaris+' baris';
+      $('stkUpd').textContent='Diperbarui: '+res.updatedAt+' | '+res.jumlahBaris+' roll';
       $('stkGrand').innerHTML='<div class="stk-grand"><span>TOTAL</span><span class="num">'+fmtN(res.grand)+'</span></div>';
       if(!res.groups.length){ list.innerHTML='<div style="color:#5B6472;font-size:13px">Tidak ada data stok.</div>'; return; }
       list.innerHTML=res.groups.map(function(g){
@@ -945,7 +945,7 @@ function stokMuat(){
         }).join('');
         return '<div class="stk-card">'+
           '<button class="stk-head" onclick="this.closest(\'.stk-card\').classList.toggle(\'open\')">'+
-            '<span><div class="nm">'+esc(g.ukuran)+'</div><div class="meta">'+g.rows.length+' baris</div></span>'+
+            '<span><div class="nm">'+esc(g.ukuran)+'</div><div class="meta">'+g.rows.length+' roll</div></span>'+
             '<span style="display:flex;align-items:center"><span class="tot">'+fmtN(g.total)+'</span><span class="chev">▼</span></span>'+
           '</button>'+
           '<div class="stk-body"><table><thead><tr><th>No. Carsheet</th><th class="num">Berat</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
