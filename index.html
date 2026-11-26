@@ -12,15 +12,21 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-title" content="Kitir Ext">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Roboto+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Carlito:wght@400;700&family=Roboto+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<script>
+if ('serviceWorker' in navigator){
+  window.addEventListener('load', function(){ navigator.serviceWorker.register('service-worker.js').catch(function(){}); });
+}
+</script>
 <style>
   :root{ --bg:#F3F4F6; --card:#FFFFFF; --ink:#14181F; --mute:#5B6472; --line:#E3E6EA; --accent:#1D4E89; --good:#157F3C; --bad:#B91C1C; }
   *{box-sizing:border-box;} html,body{margin:0;padding:0;}
-  body{ font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--ink); padding:18px; }
-  h1{ font-size:16px; font-weight:800; margin:0 0 2px; } .sub{ font-size:11px; color:var(--mute); margin-bottom:16px; }
+  body{ font-family:'Carlito', Calibri, Arial, sans-serif; background:var(--bg); color:var(--ink); padding:18px; }
+  h1{ font-family:'Carlito', Calibri, Arial, sans-serif; font-size:16px; font-weight:800; margin:0 0 2px; }
+  .sub{ font-size:11px; color:var(--mute); margin-bottom:16px; }
   #formCard{ background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; max-width:420px; }
   .field{ margin-bottom:14px; }
-  .field label{ display:block; font-size:11px; font-weight:700; text-transform:uppercase; color:var(--mute); margin-bottom:5px; }
+  .field label{ font-family:'Carlito', Calibri, Arial, sans-serif; display:block; font-size:11px; font-weight:700; text-transform:uppercase; color:var(--mute); margin-bottom:5px; }
   .field input, .field select{ width:100%; padding:11px 12px; font-size:15px; border:1px solid var(--line); border-radius:7px; background:#fff; }
   .field input:focus, .field select:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 2px rgba(29,78,137,.15); }
   .field input:disabled, .field select:disabled{ background:#F3F4F6; color:var(--mute); }
@@ -29,7 +35,6 @@
   .btn:disabled{ opacity:.5; cursor:not-allowed; }
   #btnSave{ margin-top:4px; }
   #btnPrint{ background:#B45309; }
-  #btnPrinter{ background:#0F766E; }
   #btnShareWA{ background:#25D366; }
   #btnUlang{ background:#fff; color:var(--accent); border:1px solid var(--accent); }
   #btnReset{ background:#fff; color:var(--mute); border:1px solid var(--line); font-size:12.5px; padding:10px; }
@@ -53,13 +58,30 @@
 
   .card{ background:#fff; border-radius:12px; padding:12px; margin:8px 0; box-shadow:0 1px 3px #0002; }
   #menuAtas{ max-width:420px; margin-bottom:12px; flex-wrap:wrap; }
-  #menuAtas .btn{ margin:0; flex:1 1 30%; background:#1D4E89; color:#fff; border:none; opacity:.75; }
+  #menuAtas .btn{ margin:0; flex:1 1 30%; background:#1D4E89; color:#fff; border:none; opacity:.75; display:none; }
   #menuAtas .btn.on{ background:#F59E0B; color:#14181F; opacity:1; }
-  #panelLihat .btn, #panelEdit .btn, #panelHapus .btn{ background:#1D4E89; color:#fff; border:none; }
+  #panelLihat .btn, #panelEdit .btn, #panelHapus .btn, #panelStok .btn{ background:#1D4E89; color:#fff; border:none; }
   .lh-row{ display:flex; justify-content:space-between; font-size:13px; padding:3px 0; }
   .lh-row b{ font-family:'Roboto Mono',monospace; }
 
   #edForm{ display:none; border-top:2px solid var(--accent); margin-top:12px; padding-top:12px; }
+  .stk-card{ background:#fff; border:1px solid var(--line); border-radius:12px; margin-bottom:8px; overflow:hidden; }
+  .stk-head{ width:100%; display:flex; justify-content:space-between; align-items:center; gap:10px; padding:12px 14px; border:none; background:#fff; cursor:pointer; text-align:left; font-family:inherit; color:var(--ink); }
+  .stk-head .nm{ font-size:14px; font-weight:800; }
+  .stk-head .meta{ font-size:11.5px; color:var(--mute); margin-top:2px; }
+  .stk-head .tot{ font-family:'Roboto Mono',monospace; font-size:15px; font-weight:700; color:var(--accent); white-space:nowrap; }
+  .stk-head .chev{ font-size:12px; color:var(--mute); margin-left:6px; transition:transform .15s; }
+  .stk-card.open .chev{ transform:rotate(180deg); }
+  .stk-body{ display:none; border-top:1px solid var(--line); background:#FAFBFC; }
+  .stk-card.open .stk-body{ display:block; }
+  .stk-body table{ width:100%; border-collapse:collapse; font-size:13px; }
+  .stk-body th, .stk-body td{ padding:7px 14px; border-bottom:1px solid var(--line); text-align:left; }
+  .stk-body th{ font-size:11px; text-transform:uppercase; color:var(--mute); background:#EEF2F7; }
+  .stk-body th.num, .stk-body td.num{ text-align:right; font-family:'Roboto Mono',monospace; }
+  .stk-body td.cs{ font-family:'Roboto Mono',monospace; }
+  .stk-body tr:last-child td{ border-bottom:none; }
+  .stk-grand{ background:var(--accent); color:#fff; border-radius:10px; padding:12px 14px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; font-weight:800; }
+  .stk-grand .num{ font-family:'Roboto Mono',monospace; }
 
   #login{position:fixed;inset:0;background:#F3F4F6;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;z-index:99}
   #login .logo-besar{width:180px;height:180px;border-radius:50%;background:#fff;box-shadow:0 2px 8px #0002;margin-bottom:12px}
@@ -109,6 +131,7 @@
   <button id="tabLihat" class="btn" onclick="tabKitir('lihat')">Rincian Hasil</button>
   <button id="tabEdit" class="btn" onclick="tabKitir('edit')">Edit EXT</button>
   <button id="tabHapus" class="btn" onclick="tabKitir('hapus')">Hapus EXT</button>
+  <button id="tabStok" class="btn" onclick="tabKitir('stok')">Stok</button>
 </div>
 
 <!-- RINCIAN HASIL -->
@@ -172,6 +195,15 @@
   <div id="hpList" style="margin-top:8px"></div>
 </div>
 
+<!-- STOK (tanpa PIN) -->
+<div id="panelStok" class="card" style="display:none;max-width:420px">
+  <button class="btn" onclick="stokMuat()">Muat Ulang</button>
+  <div id="stkUpd" style="font-size:12px;color:var(--mute);margin:8px 0"></div>
+  <div id="stkGrand"></div>
+  <button id="stkWa" class="btn" style="background:#25D366" onclick="stokShareGambar()" disabled>Share WA (Gambar)</button>
+  <div id="stkList" style="margin-top:8px"><div style="color:var(--mute);font-size:13px">Memuat data...</div></div>
+</div>
+
 <!-- INPUT HASIL -->
 <div id="formCard">
   <div class="field"><label>No. Carsheet</label><input type="text" id="fCarsheet" placeholder="Nomor carsheet"></div>
@@ -187,7 +219,6 @@
   <div class="field"><label>Nama Operator</label><select id="fNama"></select></div>
   <div class="field"><label>Berat (kg)</label><input type="number" id="fBerat" step="0.01" inputmode="decimal" placeholder="0,00"></div>
 
-  <button id="btnPrinter" class="btn" onclick="pilihPrinter()">🔵 Pilih Printer Bluetooth</button>
   <button id="btnSave" class="btn" onclick="kitirSimpan()">Simpan</button>
   <button id="btnPrint" class="btn" onclick="kitirCetak()" disabled>Cetak</button>
   <button id="btnShareWA" class="btn" onclick="kitirShareWA()" disabled>Share WA</button>
@@ -227,12 +258,9 @@
 </div>
 
 <script>
-if ('serviceWorker' in navigator){
-  window.addEventListener('load', function(){ navigator.serviceWorker.register('service-worker.js').catch(function(){}); });
-}
-
 var WEBAPP_URL='https://script.google.com/macros/s/AKfycbxp5L0rGdC0ki2M18YjNnylr0aAOXDLCzW5k84fJhT7aCkdlFrPeOY2tH0b75MMjDJh/exec';
 var KITIR_KEY='kitirSaved';
+var KITIR_RIWAYAT_KEY='kitirRiwayat';
 var KEY='';
 var MENU_USER=[];
 var kitirState=null;
@@ -242,6 +270,7 @@ var leRekap='';
 var UKURAN_LIST=[];
 var EDIT_CACHE=[];
 var HAPUS_CACHE=[];
+var STOK_LAST=null;
 var OPERATOR_LIST=['Agus','Edo','Singgih','Viky'];
 
 function $(id){ return document.getElementById(id); }
@@ -268,6 +297,7 @@ function masukPin(){
     $('tabLihat').style.display = MENU_USER.indexOf('ext')>=0 ? '' : 'none';
     $('tabEdit').style.display = MENU_USER.indexOf('editext')>=0 ? '' : 'none';
     $('tabHapus').style.display = MENU_USER.indexOf('hapusext')>=0 ? '' : 'none';
+    $('tabStok').style.display = '';
     $('login').style.display='none';
     $('pin').value='';
     $('login_msg').textContent='';
@@ -279,19 +309,22 @@ function masukPin(){
 /* ===== MENU ===== */
 
 function tabKitir(t){
-  var form=t==='form', lihat=t==='lihat', edit=t==='edit', hapus=t==='hapus';
+  var form=t==='form', lihat=t==='lihat', edit=t==='edit', hapus=t==='hapus', stok=t==='stok';
   $('formCard').style.display = form ? '' : 'none';
   $('ulangPanel').style.display = 'none';
   $('panelLihat').style.display = lihat ? 'block' : 'none';
   $('panelEdit').style.display = edit ? 'block' : 'none';
   $('panelHapus').style.display = hapus ? 'block' : 'none';
+  $('panelStok').style.display = stok ? 'block' : 'none';
   $('tabForm').classList.toggle('on', form);
   $('tabLihat').classList.toggle('on', lihat);
   $('tabEdit').classList.toggle('on', edit);
   $('tabHapus').classList.toggle('on', hapus);
+  $('tabStok').classList.toggle('on', stok);
   if(lihat && !$('leTgl').value) $('leTgl').value=$('fTanggal').value;
   if(edit && !$('edTgl').value) $('edTgl').value=$('fTanggal').value;
   if(hapus && !$('hpTgl').value) $('hpTgl').value=$('fTanggal').value;
+  if(stok && !STOK_LAST) stokMuat();
 }
 
 /* ===== FORM OPERATOR & UKURAN ===== */
@@ -426,9 +459,9 @@ function kitirSimpan(){
   apiGet({action:'save', payload:JSON.stringify(data)}).then(function(res){
     if(res&&res.ok){
       kitirState={data:data, sid:sid};
-      kitirRiwayatTambah(data);
       kitirDraft=null;
       try{ localStorage.setItem(KITIR_KEY, JSON.stringify(kitirState)); }catch(e){}
+      kitirRiwayatTambah(data);
       kitirIsiPreview(data,false);
       kitirTampilSudahSimpan();
       msgEl.textContent=(res.duplicate?'Data sudah tersimpan sebelumnya. ':'Tersimpan. ')+'Tekan Cetak jika struk belum keluar.';
@@ -445,160 +478,37 @@ function kitirSimpan(){
   });
 }
 
-/* ===== PRINT BARU - WEB BLUETOOTH + AUTO SAMBUNG + BARCODE ===== */
-
-function kitirBuatRawText(d, ulang){
-  var berat = Number(d.berat).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2});
-  var tgl = kitirFmtTanggal(d.tanggal)+' '+d.jam;
-  return "STP\n" +
-    "KITIR SHEET\n" +
-    (ulang ? "** CETAK ULANG **\n" : "") +
-    "No. Carsheet: "+d.carsheet+"\n" +
-    "--------------------------------\n" +
-    d.ukuran+"\n" +
-    "BERAT\n" +
-    berat+" kg\n" +
-    "EXT "+d.ext+" -> "+d.untukTf+"\n" +
-    "--------------------------------\n" +
-    tgl+"  SHIFT "+d.shift+"\n" +
-    "Operator: "+d.nama+"\n" +
-    "\n";
-}
-
-var printerDevice = null;
-var printerCharacteristic = null;
-
-async function pilihPrinter(){
-  var msgEl=$('msg');
-  if(!navigator.bluetooth){
-    msgEl.textContent='HP / browser ini tidak dukung Web Bluetooth. Buka lewat Chrome Android.';
-    msgEl.className='bad';
-    return;
-  }
-  try{
-    msgEl.textContent='Mencari printer...'; msgEl.className='';
-    printerDevice = await navigator.bluetooth.requestDevice({
-      acceptAllDevices: true,
-      optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb','0000ff00-0000-1000-8000-00805f9b34fb','0000ffe0-0000-1000-8000-00805f9b34fb']
-    });
-    var server = await printerDevice.gatt.connect();
-    var services = await server.getPrimaryServices();
-    printerCharacteristic = null;
-    for(var s of services){
-      var chars = await s.getCharacteristics();
-      for(var c of chars){
-        if(c.properties.write || c.properties.writeWithoutResponse){
-          printerCharacteristic = c;
-          break;
-        }
-      }
-      if(printerCharacteristic) break;
-    }
-    if(!printerCharacteristic) throw new Error('Characteristic print tidak ketemu di printer ini');
-    printerDevice.addEventListener('gattserverdisconnected', function(){ printerCharacteristic=null; });
-    msgEl.textContent='Printer tersambung: ' + printerDevice.name;
-    msgEl.className='ok';
-  }catch(e){
-    msgEl.textContent='Gagal pilih printer: ' + e.message;
-    msgEl.className='bad';
-  }
-}
-
-async function autoSambungPrinter(){
-  try{
-    if(!navigator.bluetooth || !navigator.bluetooth.getDevices) return false;
-    var devices = await navigator.bluetooth.getDevices();
-    if(!devices.length) return false;
-    printerDevice = devices[0];
-    var server = await printerDevice.gatt.connect();
-    var services = await server.getPrimaryServices();
-    printerCharacteristic = null;
-    for(var s of services){
-      var chars = await s.getCharacteristics();
-      for(var c of chars){
-        if(c.properties.write || c.properties.writeWithoutResponse){
-          printerCharacteristic = c;
-          break;
-        }
-      }
-      if(printerCharacteristic) break;
-    }
-    if(printerCharacteristic){
-      printerDevice.addEventListener('gattserverdisconnected', function(){ printerCharacteristic=null; });
-      if($('msg')){ $('msg').textContent='Printer otomatis tersambung: ' + printerDevice.name; $('msg').className='ok'; }
-      return true;
-    }
-  }catch(e){}
-  return false;
-}
-
-function buildPrintBytes(d, ulang){
-  var teks = kitirBuatRawText(d, ulang);
-  var enc = new TextEncoder();
-  var teksBytes = enc.encode(teks);
-  var code = String(d.carsheet).trim();
-  // Setting barcode: rata tengah, tinggi 60, lebar 2, tampilkan angka di bawah
-  // ESC a 1 = rata tengah, GS h 60 = tinggi, GS w 2 = lebar, GS H 2 = angka di bawah
-  var setting = new Uint8Array([0x1B,0x61,0x01, 0x1D,0x68,60, 0x1D,0x77,2, 0x1D,0x48,2]);
-  // Perintah barcode CODE128: GS k 73 panjang + data + NUL
-  var barcodeHead = new Uint8Array([0x1D,0x6B,0x49, code.length]);
-  var barcodeData = enc.encode(code);
-  var barcodeTail = new Uint8Array([0x00, 0x1B,0x61,0x00, 0x0A,0x0A,0x0A]);
-  var out = new Uint8Array(2 + teksBytes.length + setting.length + barcodeHead.length + barcodeData.length + barcodeTail.length);
-  var p = 0;
-  out[p++]=0x1B; out[p++]=0x40;
-  out.set(teksBytes, p); p += teksBytes.length;
-  out.set(setting, p); p += setting.length;
-  out.set(barcodeHead, p); p += barcodeHead.length;
-  out.set(barcodeData, p); p += barcodeData.length;
-  out.set(barcodeTail, p);
-  return out;
-}
-
-async function kirimKePrinter(d, ulang){
-  var msgEl=$('msg');
-  if(!printerCharacteristic){
-    await autoSambungPrinter();
-  }
-  if(printerCharacteristic && printerDevice && printerDevice.gatt.connected){
-    try{
-      var bytes = buildPrintBytes(d, ulang);
-      for(var i=0;i<bytes.length;i+=20){
-        await printerCharacteristic.writeValueWithoutResponse(bytes.slice(i, i+20));
-        await new Promise(function(r){ setTimeout(r, 30); });
-      }
-      if(msgEl){ msgEl.textContent='Terkirim ke printer.'; msgEl.className='ok'; }
-      return;
-    }catch(e){
-      if(msgEl){ msgEl.textContent='Gagal print: ' + e.message + ' - Pilih printer lagi.'; msgEl.className='bad'; }
-      printerCharacteristic = null;
-      return;
-    }
-  }
-  if(navigator.bluetooth){
-    if(msgEl){ msgEl.textContent='Pilih printer dulu di tombol biru.'; msgEl.className='bad'; }
-    await pilihPrinter();
-    if(printerCharacteristic){ kirimKePrinter(d, ulang); }
-    return;
-  }
-  kitirIsiPreview(d, ulang);
-  setTimeout(function(){ window.print(); }, 300);
-}
-
 function kitirCetak(){
   var msgEl=$('msg');
   if(!kitirState){ msgEl.textContent='Belum ada data tersimpan.'; msgEl.className='bad'; return; }
-  kirimKePrinter(kitirState.data, false);
+  kitirIsiPreview(kitirState.data,false);
+  setTimeout(function(){ window.print(); }, 300);
 }
 
 function kitirShareWA(){
   var msgEl=$('msg');
-  if(!kitirState){ msgEl.textContent='Simpan dulu.'; msgEl.className='bad'; return; }
-  kitirShareKeWA(kitirBuatPesanWA_TextBiasa(kitirState.data));
-  msgEl.textContent='WhatsApp dibuka. Data masih ada di form.'; msgEl.className='ok';
+  var d=null;
+  if(kitirState) d=kitirState.data;
+  else { try{ var raw=localStorage.getItem(KITIR_KEY); if(raw) d=JSON.parse(raw).data; }catch(e){} }
+  if(!d){ msgEl.textContent='Simpan dulu.'; msgEl.className='bad'; return; }
+  kitirShareKeWA(kitirBuatPesanWA_TextBiasa(d));
+  msgEl.textContent='WhatsApp dibuka. Data masih bisa di-share ulang.'; msgEl.className='ok';
 }
 
-  var KITIR_RIWAYAT_KEY='kitirRiwayat';
+function kitirResetForm(){
+  kitirState=null;
+  kitirDraft=null;
+  try{ localStorage.removeItem(KITIR_KEY); }catch(e){}
+  ['fCarsheet','fShift','fExt','fUntukTf','fNama','fUkuran','fBerat'].forEach(function(id){ $(id).value=''; });
+  kitirSetDefaultTanggal();
+  kitirSetFormLocked(false);
+  $('btnSave').disabled=false;
+  $('btnPrint').disabled=true;
+  $('btnShareWA').disabled=true;
+  $('msg').textContent=''; $('msg').className='';
+}
+
+/* ===== RIWAYAT SIMPAN (Share Ulang) ===== */
 
 function kitirRiwayatBaca(){
   try{ return JSON.parse(localStorage.getItem(KITIR_RIWAYAT_KEY)||'[]'); }catch(e){ return []; }
@@ -628,19 +538,6 @@ function kitirShareRiwayat(idx){
   var d=kitirRiwayatBaca()[idx];
   if(!d) return;
   kitirShareKeWA(kitirBuatPesanWA_TextBiasa(d));
-}
-
-function kitirResetForm(){
-  kitirState=null;
-  kitirDraft=null;
-  try{ localStorage.removeItem(KITIR_KEY); }catch(e){}
-  ['fCarsheet','fShift','fExt','fUntukTf','fNama','fUkuran','fBerat'].forEach(function(id){ $(id).value=''; });
-  kitirSetDefaultTanggal();
-  kitirSetFormLocked(false);
-  $('btnSave').disabled=false;
-  $('btnPrint').disabled=true;
-  $('btnShareWA').disabled=true;
-  $('msg').textContent=''; $('msg').className='';
 }
 
 /* ===== CARI CETAK ULANG ===== */
@@ -695,7 +592,8 @@ function kitirCetakUlang(idx){
     nama: it.nama,
     carsheet: it.carsheet
   };
-  kirimKePrinter(d, true);
+  kitirIsiPreview(d,true);
+  setTimeout(function(){ window.print(); }, 300);
 }
 
 /* ===== RINCIAN HASIL ===== */
@@ -886,6 +784,112 @@ function hpHapus(idx){
   }).catch(function(e){ msg.className='bad'; msg.textContent='❌ Gagal: '+e.message; });
 }
 
+/* ===== STOK (tanpa PIN) ===== */
+
+function stokBukaTutup(el){ el.closest('.stk-card').classList.toggle('open'); }
+
+function stokMuat(){
+  var list=$('stkList');
+  $('stkUpd').textContent='Memuat...';
+  $('stkWa').disabled=true;
+  list.innerHTML='<div style="color:var(--mute);font-size:13px">Memuat data...</div>';
+  fetch(WEBAPP_URL+'?action=stokukuran')
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if(!res||!res.ok){
+        $('stkUpd').textContent='Gagal memuat';
+        list.innerHTML='<div class="bad">'+esc(res&&res.error?res.error:'Gagal memuat')+'</div>';
+        return;
+      }
+      STOK_LAST=res;
+      $('stkUpd').textContent='Diperbarui: '+res.updatedAt+' | '+res.jumlahBaris+' baris';
+      $('stkGrand').innerHTML='<div class="stk-grand"><span>TOTAL</span><span class="num">'+fmtN(res.grand)+'</span></div>';
+      if(!res.groups.length){ list.innerHTML='<div style="color:var(--mute);font-size:13px">Tidak ada data stok.</div>'; return; }
+      list.innerHTML=res.groups.map(function(g){
+        var rows=g.rows.map(function(r){
+          return '<tr><td class="cs">'+esc(r.carsheet)+'</td><td class="num">'+fmtN(r.berat)+'</td></tr>';
+        }).join('');
+        return '<div class="stk-card">'+
+          '<button class="stk-head" onclick="stokBukaTutup(this)">'+
+            '<span><div class="nm">'+esc(g.ukuran)+'</div><div class="meta">'+g.rows.length+' baris</div></span>'+
+            '<span style="display:flex;align-items:center"><span class="tot">'+fmtN(g.total)+'</span><span class="chev">▼</span></span>'+
+          '</button>'+
+          '<div class="stk-body"><table><thead><tr><th>No. Carsheet</th><th class="num">Berat</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+        '</div>';
+      }).join('');
+      $('stkWa').disabled=false;
+    })
+    .catch(function(e){
+      $('stkUpd').textContent='Gagal memuat';
+      list.innerHTML='<div class="bad">Gagal: '+esc(e.message)+'</div>';
+    });
+}
+
+function stokBuatGambar(res){
+  var W=600, pad=28, rowH=44, headH=130;
+  var n=res.groups.length;
+  var H=headH+n*rowH+110;
+  var c=document.createElement('canvas');
+  c.width=W; c.height=H;
+  var ctx=c.getContext('2d');
+  ctx.fillStyle='#FFFFFF'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#1D4E89'; ctx.fillRect(0,0,W,96);
+  ctx.fillStyle='#FFFFFF';
+  ctx.font='800 26px Arial, Helvetica, sans-serif';
+  ctx.fillText('REKAP STOK PER UKURAN', pad, 46);
+  ctx.font='14px Arial, Helvetica, sans-serif';
+  ctx.fillText('STP LAWANG  |  '+res.updatedAt, pad, 74);
+  var y=headH-18;
+  ctx.fillStyle='#5B6472';
+  ctx.font='700 14px Arial, Helvetica, sans-serif';
+  ctx.fillText('UKURAN', pad, y);
+  ctx.textAlign='right';
+  ctx.fillText('TOTAL BERAT (KG)', W-pad, y);
+  ctx.textAlign='left';
+  ctx.strokeStyle='#E3E6EA'; ctx.lineWidth=1;
+  res.groups.forEach(function(g,i){
+    var top=headH+i*rowH;
+    if(i%2===1){ ctx.fillStyle='#F7F8FA'; ctx.fillRect(0,top,W,rowH); }
+    ctx.fillStyle='#14181F';
+    ctx.font='700 17px Arial, Helvetica, sans-serif';
+    ctx.fillText(g.ukuran, pad, top+rowH/2+6);
+    ctx.textAlign='right';
+    ctx.font='700 17px "Courier New", monospace';
+    ctx.fillText(fmtN(g.total), W-pad, top+rowH/2+6);
+    ctx.textAlign='left';
+    ctx.beginPath(); ctx.moveTo(0,top+rowH); ctx.lineTo(W,top+rowH); ctx.stroke();
+  });
+  var ty=headH+n*rowH+10;
+  ctx.fillStyle='#1D4E89'; ctx.fillRect(0,ty,W,64);
+  ctx.fillStyle='#FFFFFF';
+  ctx.font='800 18px Arial, Helvetica, sans-serif';
+  ctx.fillText('TOTAL KESELURUHAN', pad, ty+40);
+  ctx.textAlign='right';
+  ctx.font='800 20px "Courier New", monospace';
+  ctx.fillText(fmtN(res.grand)+' kg', W-pad, ty+40);
+  ctx.textAlign='left';
+  return c;
+}
+
+function stokShareGambar(){
+  if(!STOK_LAST||!STOK_LAST.groups||!STOK_LAST.groups.length){ alert('Data belum dimuat.'); return; }
+  var c=stokBuatGambar(STOK_LAST);
+  c.toBlob(function(blob){
+    if(!blob){ alert('Gagal membuat gambar.'); return; }
+    var file=new File([blob],'rekap_stok.png',{type:'image/png'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      navigator.share({files:[file], title:'Rekap Stok', text:'Rekap Stok per Ukuran'})
+        .catch(function(err){ if(err && err.name!=='AbortError') alert('Gagal membuka share: '+err.message); });
+    } else {
+      var url=URL.createObjectURL(blob);
+      var a=document.createElement('a'); a.href=url; a.download='rekap_stok.png';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+      window.open('https://wa.me/?text='+encodeURIComponent('Rekap Stok per Ukuran terlampir. Lampirkan gambar yang baru diunduh.'),'_blank');
+    }
+  }, 'image/png');
+}
+
 /* ===== PULIHKAN ===== */
 
 function kitirPulihkan(){
@@ -901,6 +905,7 @@ function kitirPulihkan(){
   }catch(e){ kitirState=null; try{ localStorage.removeItem(KITIR_KEY); }catch(_){} }
 }
 
+kitirPulihkan();
 $('pin').focus();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
