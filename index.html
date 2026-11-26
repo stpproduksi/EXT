@@ -34,7 +34,6 @@
   #btnUlang{ background:#fff; color:var(--accent); border:1px solid var(--accent); }
   #btnReset{ background:#fff; color:var(--mute); border:1px solid var(--line); font-size:12.5px; padding:10px; }
   #msg{ font-size:12.5px; margin-top:10px; min-height:16px; } #msg.ok{ color:var(--good); font-weight:700; } #msg.bad{ color:var(--bad); font-weight:700; }
-
   #ulangPanel{ display:none; margin-top:16px; max-width:420px; border:1px solid var(--line); border-radius:10px; padding:12px; background:#fff; }
   .ul-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
   .ul-head b{ font-size:14px; }
@@ -50,7 +49,6 @@
   .badge.belum{ background:#FEF3C7; color:#92400E; }
   .badge.sudah{ background:#DCFCE7; color:#166534; }
   .ul-item button{ margin-top:6px; width:100%; padding:9px; border:none; border-radius:7px; background:#B45309; color:#fff; font-weight:700; font-size:13px; cursor:pointer; }
-
   .card{ background:#fff; border-radius:12px; padding:12px; margin:8px 0; box-shadow:0 1px 3px #0002; }
   #menuAtas{ max-width:420px; margin-bottom:12px; flex-wrap:wrap; }
   #menuAtas .btn{ margin:0; flex:1 1 30%; background:#1D4E89; color:#fff; border:none; opacity:.75; }
@@ -58,9 +56,7 @@
   #panelLihat .btn, #panelEdit .btn, #panelHapus .btn{ background:#1D4E89; color:#fff; border:none; }
   .lh-row{ display:flex; justify-content:space-between; font-size:13px; padding:3px 0; }
   .lh-row b{ font-family:'Roboto Mono',monospace; }
-
   #edForm{ display:none; border-top:2px solid var(--accent); margin-top:12px; padding-top:12px; }
-
   .stk-card{background:#fff;border:1px solid #E3E6EA;border-radius:12px;margin-bottom:8px;overflow:hidden}
   .stk-head{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;border:none;background:#fff;cursor:pointer;text-align:left;font-family:inherit;color:#14181F}
   .stk-head .nm{font-size:14px;font-weight:800}
@@ -76,13 +72,11 @@
   .stk-body .num{text-align:right;font-family:'Roboto Mono',monospace}
   .stk-grand{background:#1D4E89;color:#fff;border-radius:10px;padding:12px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;font-weight:800}
   .stk-grand .num{font-family:'Roboto Mono',monospace}
-
   #login{position:fixed;inset:0;background:#F3F4F6;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;z-index:99}
   #login .logo-besar{width:180px;height:180px;border-radius:50%;background:#fff;box-shadow:0 2px 8px #0002;margin-bottom:12px}
   #login h2{font-size:18px;margin:0 0 16px;color:#1D4E89}
   #login input{max-width:260px;text-align:center;font-size:22px;letter-spacing:6px;width:100%;padding:10px;border:1px solid #ccc;border-radius:8px}
   #login .btn{max-width:260px;width:100%}
-
   #kitirPrintArea{ display:none; }
   .kitir{ width:54mm; margin:0; font-family:'Roboto Mono', monospace; color:#000; padding:0; }
   .kitir .brand{ text-align:center; font-size:10.5px; font-weight:700; letter-spacing:.08em; }
@@ -136,7 +130,6 @@
   <div id="stkList" style="margin-top:8px"></div>
 </div>
 
-<!-- RINCIAN HASIL -->
 <div id="panelLihat" class="card" style="display:none;max-width:420px">
   <div class="row2">
     <div class="field" style="margin:0"><label>Tanggal</label><input type="date" id="leTgl"></div>
@@ -148,7 +141,6 @@
   <div id="leBox" style="margin-top:8px"></div>
 </div>
 
-<!-- EDIT EXT -->
 <div id="panelEdit" class="card" style="display:none;max-width:420px">
   <div class="row2">
     <div class="field" style="margin:0"><label>Tanggal</label><input type="date" id="edTgl"></div>
@@ -158,7 +150,6 @@
   </div>
   <button class="btn" style="margin-top:10px" onclick="edTampil()">TAMPILKAN</button>
   <div id="edList" style="margin-top:8px"></div>
-
   <div id="edForm">
     <b>Edit data EXT</b>
     <input type="hidden" id="edRow">
@@ -184,7 +175,6 @@
   </div>
 </div>
 
-<!-- HAPUS EXT -->
 <div id="panelHapus" class="card" style="display:none;max-width:420px">
   <div class="row2">
     <div class="field" style="margin:0"><label>Tanggal</label><input type="date" id="hpTgl"></div>
@@ -197,7 +187,6 @@
   <div id="hpList" style="margin-top:8px"></div>
 </div>
 
-<!-- INPUT HASIL -->
 <div id="formCard">
   <div class="field"><label>No. Carsheet</label><input type="text" id="fCarsheet" placeholder="Nomor carsheet"></div>
   <div class="row2">
@@ -211,7 +200,6 @@
   <div class="field"><label>Ukuran</label><select id="fUkuran"><option value="">- memuat daftar -</option></select></div>
   <div class="field"><label>Nama Operator</label><select id="fNama"></select></div>
   <div class="field"><label>Berat (kg)</label><input type="number" id="fBerat" step="0.01" inputmode="decimal" placeholder="0,00"></div>
-
   <button id="btnPrinter" class="btn" onclick="pilihPrinter()">🔵 Pilih Printer Bluetooth</button>
   <button id="btnSave" class="btn" onclick="kitirSimpan()">Simpan</button>
   <button id="btnPrint" class="btn" onclick="kitirCetak()" disabled>Cetak</button>
@@ -255,7 +243,6 @@
 if ('serviceWorker' in navigator){
   window.addEventListener('load', function(){ navigator.serviceWorker.register('service-worker.js').catch(function(){}); });
 }
-
 var WEBAPP_URL='https://script.google.com/macros/s/AKfycbxp5L0rGdC0ki2M18YjNnylr0aAOXDLCzW5k84fJhT7aCkdlFrPeOY2tH0b75MMjDJh/exec';
 var KITIR_KEY='kitirSaved';
 var KITIR_RIWAYAT_KEY='kitirRiwayat';
@@ -270,20 +257,15 @@ var EDIT_CACHE=[];
 var HAPUS_CACHE=[];
 var STOK_DATA=null;
 var OPERATOR_LIST=['Agus','Edo','Singgih','Viky'];
-
 function $(id){ return document.getElementById(id); }
 function esc(s){ return String(s===null||s===undefined?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 function fmtN(n){ return Number(n||0).toLocaleString('id-ID',{maximumFractionDigits:2}); }
 function hariIni(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function jamSekarang(){ var n=new Date(); return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0'); }
-
 function apiGet(params){
   var q=new URLSearchParams(Object.assign({k:KEY}, params));
   return fetch(WEBAPP_URL+'?'+q.toString()).then(function(r){ return r.json(); });
 }
-
-/* ===== LOGIN ===== */
-
 function masukPin(){
   var p=$('pin').value.trim();
   if(!p){ $('login_msg').textContent='Masukkan PIN'; return; }
@@ -302,9 +284,6 @@ function masukPin(){
     kitirMuatDaftarUkuran();
   }).catch(function(e){ KEY=''; $('login_msg').textContent='Gagal: '+e.message; });
 }
-
-/* ===== MENU ===== */
-
 function tabKitir(t){
   var form=t==='form', lihat=t==='lihat', edit=t==='edit', hapus=t==='hapus';
   $('panelStok').style.display='none';
@@ -322,9 +301,6 @@ function tabKitir(t){
   if(edit && !$('edTgl').value) $('edTgl').value=$('fTanggal').value;
   if(hapus && !$('hpTgl').value) $('hpTgl').value=$('fTanggal').value;
 }
-
-/* ===== FORM OPERATOR & UKURAN ===== */
-
 function isiOperator(selId, nilai){
   var sel=$(selId);
   var list=OPERATOR_LIST.slice();
@@ -333,7 +309,6 @@ function isiOperator(selId, nilai){
     .map(function(n){ return '<option value="'+esc(n)+'"'+(n===nilai?' selected':'')+'>'+esc(n)+'</option>'; }).join('');
 }
 isiOperator('fNama');
-
 function isiUkuran(selId, nilai){
   var sel=$(selId);
   var list=UKURAN_LIST.slice();
@@ -342,7 +317,6 @@ function isiUkuran(selId, nilai){
     return '<option value="'+esc(v)+'"'+(v===nilai?' selected':'')+'>'+esc(v)+'</option>';
   }).join('');
 }
-
 function kitirMuatDaftarUkuran(){
   apiGet({action:'ukuranList'}).then(function(res){
     UKURAN_LIST = (res&&res.ok) ? (res.items||[]) : [];
@@ -351,27 +325,20 @@ function kitirMuatDaftarUkuran(){
     $('fUkuran').innerHTML='<option value="">- gagal memuat -</option>';
   });
 }
-
 function kitirSetDefaultTanggal(){ $('fTanggal').value=hariIni(); }
 kitirSetDefaultTanggal();
-
-/* ===== INPUT HASIL ===== */
-
 function kitirNewSid(){ return 'K'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
-
 function kitirSetFormLocked(on){
   ['fCarsheet','fTanggal','fShift','fExt','fUntukTf','fUkuran','fNama','fBerat'].forEach(function(id){
     $(id).disabled=on;
   });
 }
-
 function kitirTampilSudahSimpan(){
   kitirSetFormLocked(true);
   $('btnSave').disabled=true;
   $('btnPrint').disabled=false;
   $('btnShareWA').disabled=false;
 }
-
 function kitirAmbilForm(){
   return {
     _app:'ext',
@@ -386,7 +353,6 @@ function kitirAmbilForm(){
     nama: $('fNama').value.trim()
   };
 }
-
 function kitirValidasi(d){
   if(!d.carsheet) return 'No. Carsheet belum diisi.';
   if(!d.tanggal) return 'Tanggal belum diisi.';
@@ -398,13 +364,11 @@ function kitirValidasi(d){
   if(!d.nama) return 'Nama operator belum diisi.';
   return null;
 }
-
 function kitirFmtTanggal(iso){
   if(!iso) return '';
   var p=String(iso).split('-');
   return p.length===3 ? p[2]+'-'+p[1]+'-'+p[0] : String(iso);
 }
-
 function kitirIsiPreview(d, ulang){
   $('pTag').textContent = ulang ? '** CETAK ULANG **' : '';
   $('pCarsheet').textContent='No. Carsheet: '+d.carsheet;
@@ -420,7 +384,6 @@ function kitirIsiPreview(d, ulang){
     $('pBarcode').innerHTML='';
   }
 }
-
 function kitirBuatPesanWA_TextBiasa(d){
   var tgl=kitirFmtTanggal(d.tanggal)+' '+d.jam;
   var berat=Number(d.berat).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -433,25 +396,19 @@ function kitirBuatPesanWA_TextBiasa(d){
     "Berat : "+berat+" kg\n"+
     "KR Extruder : "+d.nama+"\n";
 }
-
 function kitirShareKeWA(pesan){ window.open("https://wa.me/?text="+encodeURIComponent(pesan),"_blank"); }
-
 function kitirSimpan(){
   var msgEl=$('msg');
   if(kitirState){ msgEl.textContent='Data sudah tersimpan. Pakai Cetak, atau Kosongkan Form untuk input baru.'; msgEl.className='bad'; return; }
-
   var data=kitirAmbilForm();
   var err=kitirValidasi(data);
   if(err){ msgEl.textContent=err; msgEl.className='bad'; return; }
-
   var json=JSON.stringify(data);
   if(!kitirDraft||kitirDraft.json!==json){ kitirDraft={sid:kitirNewSid(), json:json}; }
   data.sid=kitirDraft.sid;
   var sid=kitirDraft.sid;
-
   var btn=$('btnSave');
   btn.disabled=true; msgEl.textContent='Menyimpan...'; msgEl.className='';
-
   apiGet({action:'save', payload:JSON.stringify(data)}).then(function(res){
     if(res&&res.ok){
       kitirState={data:data, sid:sid};
@@ -473,9 +430,6 @@ function kitirSimpan(){
     msgEl.className='bad';
   });
 }
-
-/* ===== PRINT BLUETOOTH (Web Bluetooth) ===== */
-
 function kitirBuatRawText(d, ulang){
   var berat = Number(d.berat).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2});
   var tgl = kitirFmtTanggal(d.tanggal)+' '+d.jam;
@@ -493,10 +447,8 @@ function kitirBuatRawText(d, ulang){
     "Operator: "+d.nama+"\n" +
     "\n";
 }
-
 var printerDevice = null;
 var printerCharacteristic = null;
-
 async function pilihPrinter(){
   var msgEl=$('msg');
   if(!navigator.bluetooth){
@@ -532,7 +484,6 @@ async function pilihPrinter(){
     msgEl.className='bad';
   }
 }
-
 async function autoSambungPrinter(){
   try{
     if(!navigator.bluetooth || !navigator.bluetooth.getDevices) return false;
@@ -560,7 +511,6 @@ async function autoSambungPrinter(){
   }catch(e){}
   return false;
 }
-
 function buildPrintBytes(d, ulang){
   var teks = kitirBuatRawText(d, ulang);
   var enc = new TextEncoder();
@@ -580,7 +530,6 @@ function buildPrintBytes(d, ulang){
   out.set(barcodeTail, p);
   return out;
 }
-
 async function kirimKePrinter(d, ulang){
   var msgEl=$('msg');
   if(!printerCharacteristic){
@@ -610,33 +559,26 @@ async function kirimKePrinter(d, ulang){
   kitirIsiPreview(d, ulang);
   setTimeout(function(){ window.print(); }, 300);
 }
-
 function kitirCetak(){
   var msgEl=$('msg');
   if(!kitirState){ msgEl.textContent='Belum ada data tersimpan.'; msgEl.className='bad'; return; }
   kirimKePrinter(kitirState.data, false);
 }
-
 function kitirShareWA(){
   var msgEl=$('msg');
   if(!kitirState){ msgEl.textContent='Simpan dulu.'; msgEl.className='bad'; return; }
   kitirShareKeWA(kitirBuatPesanWA_TextBiasa(kitirState.data));
   msgEl.textContent='WhatsApp dibuka. Data masih bisa di-share ulang.'; msgEl.className='ok';
 }
-
-/* ===== RIWAYAT SIMPAN (Share Ulang) ===== */
-
 function kitirRiwayatBaca(){
   try{ return JSON.parse(localStorage.getItem(KITIR_RIWAYAT_KEY)||'[]'); }catch(e){ return []; }
 }
-
 function kitirRiwayatTambah(d){
   var list=kitirRiwayatBaca();
   list.unshift(d);
   if(list.length>30) list=list.slice(0,30);
   try{ localStorage.setItem(KITIR_RIWAYAT_KEY, JSON.stringify(list)); }catch(e){}
 }
-
 function kitirTampilRiwayat(){
   var list=kitirRiwayatBaca();
   var box=$('ulangList');
@@ -649,13 +591,11 @@ function kitirTampilRiwayat(){
       '<button type="button" style="background:#25D366" onclick="kitirShareRiwayat('+i+')">Share WA</button></div>';
   }).join('');
 }
-
 function kitirShareRiwayat(idx){
   var d=kitirRiwayatBaca()[idx];
   if(!d) return;
   kitirShareKeWA(kitirBuatPesanWA_TextBiasa(d));
 }
-
 function kitirResetForm(){
   kitirState=null;
   kitirDraft=null;
@@ -668,18 +608,13 @@ function kitirResetForm(){
   $('btnShareWA').disabled=true;
   $('msg').textContent=''; $('msg').className='';
 }
-
-/* ===== CARI CETAK ULANG ===== */
-
 function kitirBukaUlang(){
   var p=$('ulangPanel');
   p.style.display='block';
   $('ulCari').focus();
   p.scrollIntoView({behavior:'smooth'});
 }
-
 function kitirTutupUlang(){ $('ulangPanel').style.display='none'; }
-
 function kitirCariUlang(){
   var kode=$('ulCari').value.trim();
   var list=$('ulangList');
@@ -691,7 +626,6 @@ function kitirCariUlang(){
     kitirRenderUlang();
   }).catch(function(e){ list.innerHTML='<div class="bad">Gagal mencari: '+esc(e.message)+'</div>'; });
 }
-
 function kitirRenderUlang(){
   var list=$('ulangList');
   if(!ulangCache.length){ list.innerHTML='<div style="color:var(--mute);font-size:12.5px">Carsheet tidak ditemukan.</div>'; return; }
@@ -706,7 +640,6 @@ function kitirRenderUlang(){
       '</div>';
   }).join('');
 }
-
 function kitirCetakUlang(idx){
   var it=ulangCache[idx];
   if(!it) return;
@@ -723,9 +656,6 @@ function kitirCetakUlang(idx){
   };
   kirimKePrinter(d, true);
 }
-
-/* ===== RINCIAN HASIL ===== */
-
 function leKelompok(items){
   var kr={};
   items.forEach(function(it){
@@ -737,7 +667,6 @@ function leKelompok(items){
   });
   return kr;
 }
-
 function leBuatTeks(tgl, shift, kr, grand, jumlah){
   var t='📊 LAPORAN EXT\nTanggal: '+kitirFmtTanggal(tgl)+' | Shift: '+(shift||'Semua')+'\n';
   Object.keys(kr).sort().forEach(function(n){
@@ -753,7 +682,6 @@ function leBuatTeks(tgl, shift, kr, grand, jumlah){
   t+='GRAND TOTAL '+fmtN(grand)+' kg ('+jumlah+' carsheet)';
   return t;
 }
-
 function leHtml(kr, grand, jumlah){
   var h=Object.keys(kr).sort().map(function(n){
     var k=kr[n];
@@ -774,12 +702,10 @@ function leHtml(kr, grand, jumlah){
     'GRAND TOTAL&nbsp;&nbsp;&nbsp;'+fmtN(grand)+' kg<br>'+
     '<small style="font-weight:normal">'+jumlah+' carsheet</small></div>';
 }
-
 function leShareWa(){
   if(!leRekap){ alert('Tampilkan data dulu'); return; }
   window.open('https://wa.me/?text='+encodeURIComponent(leRekap),'_blank');
 }
-
 function leCari(){
   var tgl=$('leTgl').value, shift=$('leShift').value;
   var box=$('leBox');
@@ -795,9 +721,6 @@ function leCari(){
       '<button class="btn" style="background:#25D366" onclick="leShareWa()">Share WA</button>';
   }).catch(function(e){ box.innerHTML='<div class="bad">Gagal: '+esc(e.message)+'</div>'; });
 }
-
-/* ===== EDIT EXT ===== */
-
 function edTampil(){
   var tgl=$('edTgl').value, shift=$('edShift').value;
   var box=$('edList');
@@ -818,7 +741,6 @@ function edTampil(){
     }).join('');
   }).catch(function(e){ box.innerHTML='<div class="bad">Gagal: '+esc(e.message)+'</div>'; });
 }
-
 function edPilih(idx){
   var it=EDIT_CACHE[idx];
   if(!it) return;
@@ -837,12 +759,10 @@ function edPilih(idx){
   $('edForm').style.display='block';
   $('edForm').scrollIntoView({behavior:'smooth'});
 }
-
 function edBatal(){
   $('edForm').style.display='none';
   $('edMsg').textContent='';
 }
-
 function edSimpan(){
   var msg=$('edMsg');
   var d={
@@ -872,9 +792,6 @@ function edSimpan(){
     }
   }).catch(function(e){ msg.className='bad'; msg.textContent='❌ Gagal: '+e.message; });
 }
-
-/* ===== HAPUS EXT ===== */
-
 function hpTampil(){
   var tgl=$('hpTgl').value, shift=$('hpShift').value;
   var box=$('hpList');
@@ -895,7 +812,6 @@ function hpTampil(){
     }).join('');
   }).catch(function(e){ box.innerHTML='<div class="bad">Gagal: '+esc(e.message)+'</div>'; });
 }
-
 function hpHapus(idx){
   var it=HAPUS_CACHE[idx];
   if(!it) return;
@@ -911,9 +827,6 @@ function hpHapus(idx){
     }
   }).catch(function(e){ msg.className='bad'; msg.textContent='❌ Gagal: '+e.message; });
 }
-
-/* ===== STOK - VERSI CEPET (CACHE + LAZY RENDER) ===== */
-
 function stokBuka(){
   ['formCard','ulangPanel','panelLihat','panelEdit','panelHapus'].forEach(function(id){ $(id).style.display='none'; });
   ['tabForm','tabLihat','tabEdit','tabHapus'].forEach(function(id){ $(id).classList.remove('on'); });
@@ -921,12 +834,10 @@ function stokBuka(){
   $('panelStok').style.display='block';
   if(!STOK_DATA) stokMuat(false);
 }
-
 function stokRenderGrand(){
   if(!STOK_DATA) return;
   $('stkGrand').innerHTML='<div class="stk-grand"><span>TOTAL</span><span class="num">'+fmtN(STOK_DATA.grand)+'</span></div>';
 }
-
 function stokRenderList(){
   var list=$('stkList');
   if(!STOK_DATA || !STOK_DATA.groups.length){ list.innerHTML='<div style="color:#5B6472;font-size:13px">Tidak ada data stok.</div>'; return; }
@@ -940,7 +851,6 @@ function stokRenderList(){
     '</div>';
   }).join('');
 }
-
 function stokToggle(btn, gi){
   var card = btn.closest('.stk-card');
   var isOpen = card.classList.contains('open');
@@ -958,7 +868,6 @@ function stokToggle(btn, gi){
     }
   }
 }
-
 function stokMuat(force){
   var list=$('stkList');
   if(!force && STOK_DATA){
@@ -1010,18 +919,20 @@ function stokMuat(force){
       }
     });
 }
-
-function stokBuatGambar(res){
+function stokBuatGambar(res, groups){
+  var SCALE = 2;
   var W=600, pad=28;
   var headH=96;
   var groupHeadH=76, tableHeadH=36, rowH=36, gap=16, footH=64;
+  var list = groups || res.groups;
   var H=headH+10;
-  res.groups.forEach(function(g){
+  list.forEach(function(g){
     H += groupHeadH + tableHeadH + (g.rows.length * rowH) + gap;
   });
   H += footH + 20;
-  var c=document.createElement('canvas'); c.width=W; c.height=H;
+  var c=document.createElement('canvas'); c.width=W*SCALE; c.height=H*SCALE;
   var ctx=c.getContext('2d');
+  ctx.scale(SCALE, SCALE);
   ctx.fillStyle='#FFFFFF'; ctx.fillRect(0,0,W,H);
   ctx.fillStyle='#1D4E89'; ctx.fillRect(0,0,W,96);
   ctx.fillStyle='#FFFFFF';
@@ -1029,8 +940,10 @@ function stokBuatGambar(res){
   ctx.font='14px Arial, Helvetica, sans-serif'; ctx.fillText('STP LAWANG  |  '+res.updatedAt, pad, 74);
   var y=headH+10;
   var totalRoll=0;
-  res.groups.forEach(function(g){
+  var totalBerat=0;
+  list.forEach(function(g){
     totalRoll += g.rows.length;
+    totalBerat += g.total;
     ctx.fillStyle='#FFFFFF'; ctx.fillRect(pad, y, W-pad*2, groupHeadH);
     ctx.strokeStyle='#E3E6EA'; ctx.lineWidth=1;
     ctx.strokeRect(pad, y, W-pad*2, groupHeadH);
@@ -1061,34 +974,58 @@ function stokBuatGambar(res){
   });
   ctx.fillStyle='#1D4E89'; ctx.fillRect(0,y,W,footH);
   ctx.fillStyle='#FFFFFF'; ctx.font='800 18px Arial, Helvetica, sans-serif';
-  ctx.fillText('TOTAL KESELURUHAN', pad, y+28);
+  ctx.fillText(groups ? 'SUBTOTAL' : 'TOTAL KESELURUHAN', pad, y+28);
   ctx.font='400 13px Arial, Helvetica, sans-serif';
   ctx.fillText(totalRoll+' Roll', pad, y+48);
   ctx.textAlign='right'; ctx.font='800 20px "Courier New", monospace';
-  ctx.fillText(fmtN(res.grand)+' kg', W-pad, y+40); ctx.textAlign='left';
+  ctx.fillText(fmtN(totalBerat)+' kg', W-pad, y+40); ctx.textAlign='left';
   return c;
 }
-
 function stokShareGambar(){
   if(!STOK_DATA||!STOK_DATA.groups||!STOK_DATA.groups.length){ alert('Data belum dimuat.'); return; }
-  stokBuatGambar(STOK_DATA).toBlob(function(blob){
-    if(!blob){ alert('Gagal membuat gambar.'); return; }
-    var file=new File([blob],'rekap_stok.png',{type:'image/png'});
-    if(navigator.canShare && navigator.canShare({files:[file]})){
-      navigator.share({files:[file], title:'Rekap Stok', text:'Rekap Stok per Ukuran'})
-        .catch(function(err){ if(err && err.name!=='AbortError') alert('Gagal membuka share: '+err.message); });
-    } else {
-      var url=URL.createObjectURL(blob);
-      var a=document.createElement('a'); a.href=url; a.download='rekap_stok.png';
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
-      window.open('https://wa.me/?text='+encodeURIComponent('Rekap Stok per Ukuran terlampir. Lampirkan gambar yang baru diunduh.'),'_blank');
+  var MAX_BARIS_PER_GAMBAR = 25;
+  var chunks = [];
+  var cur = [];
+  var curBaris = 0;
+  STOK_DATA.groups.forEach(function(g){
+    if(cur.length > 0 && (curBaris + g.rows.length) > MAX_BARIS_PER_GAMBAR){
+      chunks.push(cur);
+      cur = [];
+      curBaris = 0;
     }
-  }, 'image/png');
+    cur.push(g);
+    curBaris += g.rows.length;
+  });
+  if(cur.length) chunks.push(cur);
+  var i = 0;
+  function kirimBerikutnya(){
+    if(i >= chunks.length) return;
+    var chunk = chunks[i];
+    i++;
+    var canvas = stokBuatGambar(STOK_DATA, chunk);
+    canvas.toBlob(function(blob){
+      if(!blob){ kirimBerikutnya(); return; }
+      var namaUkuran = chunk.map(function(g){ return g.ukuran; }).join('_').replace(/[^A-Za-z0-9]+/g,'_');
+      var namaFile = 'stok_'+namaUkuran+'.png';
+      var file = new File([blob], namaFile, {type:'image/png'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        navigator.share({files:[file], title:'Stok', text:'Stok : '+chunk.map(function(g){ return g.ukuran; }).join(', ')})
+          .then(function(){ setTimeout(kirimBerikutnya, 800); })
+          .catch(function(err){
+            if(err && err.name!=='AbortError') alert('Gagal share: '+err.message);
+            setTimeout(kirimBerikutnya, 800);
+          });
+      } else {
+        var url=URL.createObjectURL(blob);
+        var a=document.createElement('a'); a.href=url; a.download=namaFile;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+        setTimeout(kirimBerikutnya, 800);
+      }
+    }, 'image/png', 0.95);
+  }
+  kirimBerikutnya();
 }
-
-/* ===== PULIHKAN ===== */
-
 function kitirPulihkan(){
   var raw=null;
   try{ raw=localStorage.getItem(KITIR_KEY); }catch(e){}
@@ -1101,7 +1038,6 @@ function kitirPulihkan(){
     $('msg').className='ok';
   }catch(e){ kitirState=null; try{ localStorage.removeItem(KITIR_KEY); }catch(_){} }
 }
-
 kitirPulihkan();
 $('pin').focus();
 </script>
