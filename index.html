@@ -920,25 +920,38 @@ function stokMuat(force){
       }
     });
 }
-// === STOK SHARE WA TEKS ===
+// === STOK SHARE WA TEKS - LURUS ===
 function stokBuatTeks(chunk, isSemua){
-  var teks = "REKAP STOK PER UKURAN\n";
-  teks += "STP LAWANG  |  " + STOK_DATA.updatedAt + "\n";
-  teks += "------------------------------\n";
+  var teks = "*REKAP STOK PER UKURAN*\n";
+  teks += "STP LAWANG : " + STOK_DATA.updatedAt + " " + jamSekarang() + "\n";
+  teks += "==============================\n";
   var totalRoll = 0;
   var totalBerat = 0;
   chunk.forEach(function(g){
     totalRoll += g.rows.length;
     totalBerat += g.total;
-    teks += "\n" + g.ukuran + "\n";
-    teks += g.rows.length + " Roll - " + fmtN(g.total) + " kg\n";
+    teks += "\n*" + g.ukuran + "*\n";
+    teks += g.rows.length + " Roll = " + fmtN(g.total) + " kg\n";
+    var maxLen = 8;
     g.rows.forEach(function(r){
-      teks += r.carsheet + " | " + fmtN(r.berat) + "\n";
+      if(String(r.carsheet).length > maxLen) maxLen = String(r.carsheet).length;
     });
+    function pad(str, len){
+      str = String(str);
+      while(str.length < len) str += " ";
+      return str;
+    }
+    teks += "```\n";
+    teks += pad("Carsheet", maxLen) + " : Berat\n";
+    teks += pad("", maxLen).replace(/ /g, "-") + " : -----\n";
+    g.rows.forEach(function(r){
+      teks += pad(r.carsheet, maxLen) + " : " + fmtN(r.berat) + " kg\n";
+    });
+    teks += "```";
   });
-  teks += "\n------------------------------\n";
-  teks += (isSemua ? "TOTAL KESELURUHAN" : "SUBTOTAL") + "\n";
-  teks += totalRoll + " Roll - " + fmtN(totalBerat) + " kg";
+  teks += "\n==============================\n";
+  teks += "*" + (isSemua ? "TOTAL KESELURUHAN" : "SUBTOTAL") + "*\n";
+  teks += "*" + totalRoll + " Roll = " + fmtN(totalBerat) + " kg*";
   return teks;
 }
 function stokShareTeks(){
