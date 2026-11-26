@@ -129,7 +129,7 @@
 </div>
 
 <div id="panelStok" class="card" style="display:none;max-width:420px">
-  <button class="btn" onclick="stokMuat()">Muat Ulang</button>
+  <button class="btn" onclick="stokMuat(true)">Muat Ulang</button>
   <div id="stkUpd" style="font-size:12px;color:#5B6472;margin:8px 0"></div>
   <div id="stkGrand"></div>
   <button id="stkWa" class="btn" style="background:#25D366" onclick="stokShareGambar()" disabled>Share WA (Gambar)</button>
@@ -912,56 +912,114 @@ function hpHapus(idx){
   }).catch(function(e){ msg.className='bad'; msg.textContent='❌ Gagal: '+e.message; });
 }
 
-/* ===== STOK (tanpa PIN) ===== */
+/* ===== STOK - VERSI CEPET (CACHE + LAZY RENDER) ===== */
 
 function stokBuka(){
   ['formCard','ulangPanel','panelLihat','panelEdit','panelHapus'].forEach(function(id){ $(id).style.display='none'; });
   ['tabForm','tabLihat','tabEdit','tabHapus'].forEach(function(id){ $(id).classList.remove('on'); });
   $('tabStok').classList.add('on');
   $('panelStok').style.display='block';
-  if(!STOK_DATA) stokMuat();
+  if(!STOK_DATA) stokMuat(false);
 }
 
-function stokMuat(){
+function stokRenderGrand(){
+  if(!STOK_DATA) return;
+  $('stkGrand').innerHTML='<div class="stk-grand"><span>TOTAL</span><span class="num">'+fmtN(STOK_DATA.grand)+'</span></div>';
+}
+
+function stokRenderList(){
   var list=$('stkList');
-  $('stkUpd').textContent='Memuat...';
-  $('stkWa').disabled=true;
-  list.innerHTML='<div style="color:#5B6472;font-size:13px">Memuat data...</div>';
+  if(!STOK_DATA || !STOK_DATA.groups.length){ list.innerHTML='<div style="color:#5B6472;font-size:13px">Tidak ada data stok.</div>'; return; }
+  list.innerHTML=STOK_DATA.groups.map(function(g,gi){
+    return '<div class="stk-card" data-gi="'+gi+'">'+
+      '<button class="stk-head" onclick="stokToggle(this,'+gi+')">'+
+        '<span><div class="nm">'+esc(g.ukuran)+'</div><div class="meta">'+g.rows.length+' Roll - klik untuk lihat</div></span>'+
+        '<span style="display:flex;align-items:center"><span class="tot">'+fmtN(g.total)+'</span><span class="chev">▼</span></span>'+
+      '</button>'+
+      '<div class="stk-body"><div class="stk-rows" data-rows="'+gi+'"></div></div>'+
+    '</div>';
+  }).join('');
+}
+
+function stokToggle(btn, gi){
+  var card = btn.closest('.stk-card');
+  var isOpen = card.classList.contains('open');
+  card.classList.toggle('open');
+  if(!isOpen){
+    var g = STOK_DATA.groups[gi];
+    var box = card.querySelector('[data-rows]');
+    if(box && box.innerHTML===''){
+      var html='<table><thead><tr><th>No. Carsheet</th><th class="num">Berat</th></tr></thead><tbody>';
+      g.rows.forEach(function(r){
+        html+='<tr><td>'+esc(r.carsheet)+'</td><td class="num">'+fmtN(r.berat)+'</td></tr>';
+      });
+      html+='</tbody></table>';
+      box.innerHTML=html;
+    }
+  }
+}
+
+function stokMuat(force){
+  var list=$('stkList');
+  if(!force && STOK_DATA){
+    stokRenderGrand();
+    stokRenderList();
+    $('stkUpd').textContent='Diperbarui: '+STOK_DATA.updatedAt+' | (cache)';
+    $('stkWa').disabled=false;
+  }
+  if(!force){
+    try{
+      var c = JSON.parse(localStorage.getItem('stokCache')||'null');
+      if(c && c.data && (Date.now() - c.ts < 5*60*1000)){
+        STOK_DATA = c.data;
+        stokRenderGrand();
+        stokRenderList();
+        $('stkUpd').textContent='Diperbarui: '+STOK_DATA.updatedAt+' | (cache, 5 mnt)';
+        $('stkWa').disabled=false;
+      }
+    }catch(e){}
+  }
+  if(force){
+    $('stkUpd').textContent='Memuat ulang...';
+    list.innerHTML='<div style="color:#5B6472;font-size:13px">Memuat data...</div>';
+  } else if(!STOK_DATA){
+    $('stkUpd').textContent='Memuat...';
+    list.innerHTML='<div style="color:#5B6472;font-size:13px">Memuat data...</div>';
+  }
   fetch(WEBAPP_URL+'?action=stokukuran')
     .then(function(r){ return r.json(); })
     .then(function(res){
       if(!res||!res.ok){
-        $('stkUpd').textContent='Gagal memuat';
-        list.innerHTML='<div class="bad">'+esc(res&&res.error?res.error:'Gagal memuat')+'</div>';
+        if(!STOK_DATA){
+          $('stkUpd').textContent='Gagal memuat';
+          list.innerHTML='<div class="bad">'+esc(res&&res.error?res.error:'Gagal memuat')+'</div>';
+        }
         return;
       }
       STOK_DATA=res;
-      $('stkUpd').textContent='Diperbarui: '+res.updatedAt+' | '+res.jumlahBaris+' roll';
-      $('stkGrand').innerHTML='<div class="stk-grand"><span>TOTAL</span><span class="num">'+fmtN(res.grand)+'</span></div>';
-      if(!res.groups.length){ list.innerHTML='<div style="color:#5B6472;font-size:13px">Tidak ada data stok.</div>'; return; }
-      list.innerHTML=res.groups.map(function(g){
-        var rows=g.rows.map(function(r){
-          return '<tr><td>'+esc(r.carsheet)+'</td><td class="num">'+fmtN(r.berat)+'</td></tr>';
-        }).join('');
-        return '<div class="stk-card">'+
-          '<button class="stk-head" onclick="this.closest(\'.stk-card\').classList.toggle(\'open\')">'+
-            '<span><div class="nm">'+esc(g.ukuran)+'</div><div class="meta">'+g.rows.length+' roll</div></span>'+
-            '<span style="display:flex;align-items:center"><span class="tot">'+fmtN(g.total)+'</span><span class="chev">▼</span></span>'+
-          '</button>'+
-          '<div class="stk-body"><table><thead><tr><th>No. Carsheet</th><th class="num">Berat</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
-        '</div>';
-      }).join('');
+      try{ localStorage.setItem('stokCache', JSON.stringify({ts:Date.now(), data:res})); }catch(e){}
+      stokRenderGrand();
+      stokRenderList();
+      $('stkUpd').textContent='Diperbarui: '+res.updatedAt+' | '+res.jumlahBaris+' Roll';
       $('stkWa').disabled=false;
     })
     .catch(function(e){
-      $('stkUpd').textContent='Gagal memuat';
-      list.innerHTML='<div class="bad">Gagal: '+esc(e.message)+'</div>';
+      if(!STOK_DATA){
+        $('stkUpd').textContent='Gagal memuat';
+        list.innerHTML='<div class="bad">Gagal: '+esc(e.message)+'</div>';
+      }
     });
 }
 
 function stokBuatGambar(res){
-  var W=600, pad=28, rowH=44, headH=130, n=res.groups.length;
-  var H=headH+n*rowH+110;
+  var W=600, pad=28;
+  var headH=96;
+  var groupHeadH=76, tableHeadH=36, rowH=36, gap=16, footH=64;
+  var H=headH+10;
+  res.groups.forEach(function(g){
+    H += groupHeadH + tableHeadH + (g.rows.length * rowH) + gap;
+  });
+  H += footH + 20;
   var c=document.createElement('canvas'); c.width=W; c.height=H;
   var ctx=c.getContext('2d');
   ctx.fillStyle='#FFFFFF'; ctx.fillRect(0,0,W,H);
@@ -969,25 +1027,45 @@ function stokBuatGambar(res){
   ctx.fillStyle='#FFFFFF';
   ctx.font='800 26px Arial, Helvetica, sans-serif'; ctx.fillText('REKAP STOK PER UKURAN', pad, 46);
   ctx.font='14px Arial, Helvetica, sans-serif'; ctx.fillText('STP LAWANG  |  '+res.updatedAt, pad, 74);
-  ctx.fillStyle='#5B6472'; ctx.font='700 14px Arial, Helvetica, sans-serif';
-  ctx.fillText('UKURAN', pad, headH-18);
-  ctx.textAlign='right'; ctx.fillText('TOTAL BERAT (KG)', W-pad, headH-18); ctx.textAlign='left';
-  ctx.strokeStyle='#E3E6EA'; ctx.lineWidth=1;
-  res.groups.forEach(function(g,i){
-    var top=headH+i*rowH;
-    if(i%2===1){ ctx.fillStyle='#F7F8FA'; ctx.fillRect(0,top,W,rowH); }
+  var y=headH+10;
+  var totalRoll=0;
+  res.groups.forEach(function(g){
+    totalRoll += g.rows.length;
+    ctx.fillStyle='#FFFFFF'; ctx.fillRect(pad, y, W-pad*2, groupHeadH);
+    ctx.strokeStyle='#E3E6EA'; ctx.lineWidth=1;
+    ctx.strokeRect(pad, y, W-pad*2, groupHeadH);
     ctx.fillStyle='#14181F';
-    ctx.font='700 17px Arial, Helvetica, sans-serif'; ctx.fillText(g.ukuran, pad, top+rowH/2+6);
-    ctx.textAlign='right'; ctx.font='700 17px "Courier New", monospace';
-    ctx.fillText(fmtN(g.total), W-pad, top+rowH/2+6); ctx.textAlign='left';
-    ctx.beginPath(); ctx.moveTo(0,top+rowH); ctx.lineTo(W,top+rowH); ctx.stroke();
+    ctx.font='800 19px Arial, Helvetica, sans-serif';
+    ctx.fillText(g.ukuran, pad+14, y+30);
+    ctx.fillStyle='#5B6472'; ctx.font='400 14px Arial, Helvetica, sans-serif';
+    ctx.fillText(g.rows.length+' roll', pad+14, y+54);
+    ctx.fillStyle='#1D4E89'; ctx.textAlign='right'; ctx.font='800 19px "Courier New", monospace';
+    ctx.fillText(fmtN(g.total), W-pad-14, y+38); ctx.textAlign='left';
+    y += groupHeadH;
+    ctx.fillStyle='#EEF2F7'; ctx.fillRect(pad, y, W-pad*2, tableHeadH);
+    ctx.strokeRect(pad, y, W-pad*2, tableHeadH);
+    ctx.fillStyle='#5B6472'; ctx.font='700 13px Arial, Helvetica, sans-serif';
+    ctx.fillText('NO. CARSHEET', pad+14, y+23);
+    ctx.textAlign='right'; ctx.fillText('BERAT', W-pad-14, y+23); ctx.textAlign='left';
+    y += tableHeadH;
+    g.rows.forEach(function(r, idx){
+      if(idx%2===1){ ctx.fillStyle='#F7F8FA'; ctx.fillRect(pad, y, W-pad*2, rowH); }
+      ctx.strokeStyle='#E3E6EA'; ctx.strokeRect(pad, y, W-pad*2, rowH);
+      ctx.fillStyle='#14181F'; ctx.font='400 16px Arial, Helvetica, sans-serif';
+      ctx.fillText(String(r.carsheet), pad+14, y+24);
+      ctx.textAlign='right'; ctx.font='400 16px "Courier New", monospace';
+      ctx.fillText(fmtN(r.berat), W-pad-14, y+24); ctx.textAlign='left';
+      y += rowH;
+    });
+    y += gap;
   });
-  var ty=headH+n*rowH+10;
-  ctx.fillStyle='#1D4E89'; ctx.fillRect(0,ty,W,64);
+  ctx.fillStyle='#1D4E89'; ctx.fillRect(0,y,W,footH);
   ctx.fillStyle='#FFFFFF'; ctx.font='800 18px Arial, Helvetica, sans-serif';
-  ctx.fillText('TOTAL KESELURUHAN', pad, ty+40);
+  ctx.fillText('TOTAL KESELURUHAN', pad, y+28);
+  ctx.font='400 13px Arial, Helvetica, sans-serif';
+  ctx.fillText(totalRoll+' Roll', pad, y+48);
   ctx.textAlign='right'; ctx.font='800 20px "Courier New", monospace';
-  ctx.fillText(fmtN(res.grand)+' kg', W-pad, ty+40); ctx.textAlign='left';
+  ctx.fillText(fmtN(res.grand)+' kg', W-pad, y+40); ctx.textAlign='left';
   return c;
 }
 
