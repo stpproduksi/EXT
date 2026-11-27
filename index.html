@@ -513,22 +513,59 @@ async function autoSambungPrinter(){
   return false;
 }
 function buildPrintBytes(d, ulang){
-  var teks = kitirBuatRawText(d, ulang);
   var enc = new TextEncoder();
-  var teksBytes = enc.encode(teks);
+  function txt(s){ return enc.encode(s); }
+  function cmd(){ return new Uint8Array(Array.prototype.slice.call(arguments)); }
+  var parts = [];
+  function add(){ for(var i=0;i<arguments.length;i++) parts.push(arguments[i]); }
+
+  add(cmd(0x1B,0x40));
+  add(cmd(0x1B,0x61,0x01)); // RATA TENGAH
+
+  add(txt("STP\nKITIR SHEET\n"));
+  if(ulang) add(txt("** CETAK ULANG **\n"));
+
+  // EDIT - CARSHEET, ganti 0x10 kalau mau lebih besar
+  add(cmd(0x1D,0x21,0x10));
+  add(txt("No. Carsheet: "+d.carsheet+"\n"));
+  add(cmd(0x1D,0x21,0x00));
+
+  add(txt("--------------------------------\n"));
+
+  // EDIT - NAMA PRODUK, ganti 0x10 kalau mau lebih besar
+  add(cmd(0x1D,0x21,0x10));
+  add(txt(d.ukuran+"\n"));
+  add(cmd(0x1D,0x21,0x00));
+
+  add(txt("BERAT\n"));
+
+  // EDIT - ANGKA BERAT, ganti 0x11 kalau mau lebih besar
+  var berat = Number(d.berat).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2});
+  add(cmd(0x1D,0x21,0x11));
+  add(txt(berat+" kg\n"));
+  add(cmd(0x1D,0x21,0x00));
+
+  // EDIT - EXT -> TF, ganti 0x10 kalau mau lebih besar
+  add(cmd(0x1D,0x21,0x10));
+  add(txt("EXT "+d.ext+" -> "+d.untukTf+"\n"));
+  add(cmd(0x1D,0x21,0x00));
+
+  add(txt("--------------------------------\n"));
+  var tgl = kitirFmtTanggal(d.tanggal)+' '+d.jam;
+  add(txt(tgl+"  SHIFT "+d.shift+"\n"));
+  add(txt("Operator: "+d.nama+"\n\n"));
+
   var code = String(d.carsheet).trim();
-  var setting = new Uint8Array([0x1B,0x61,0x01, 0x1D,0x68,60, 0x1D,0x77,2, 0x1D,0x48,2]);
-  var barcodeHead = new Uint8Array([0x1D,0x6B,0x49, code.length]);
-  var barcodeData = enc.encode(code);
-  var barcodeTail = new Uint8Array([0x00, 0x1B,0x61,0x00, 0x0A,0x0A,0x0A]);
-  var out = new Uint8Array(2 + teksBytes.length + setting.length + barcodeHead.length + barcodeData.length + barcodeTail.length);
+  add(cmd(0x1B,0x61,0x01, 0x1D,0x68,60, 0x1D,0x77,2, 0x1D,0x48,2));
+  add(cmd(0x1D,0x6B,0x49, code.length));
+  add(txt(code));
+  add(cmd(0x00, 0x1B,0x61,0x00, 0x0A,0x0A,0x0A));
+
+  var len = 0;
+  parts.forEach(function(p){ len += p.length; });
+  var out = new Uint8Array(len);
   var p = 0;
-  out[p++]=0x1B; out[p++]=0x40;
-  out.set(teksBytes, p); p += teksBytes.length;
-  out.set(setting, p); p += setting.length;
-  out.set(barcodeHead, p); p += barcodeHead.length;
-  out.set(barcodeData, p); p += barcodeData.length;
-  out.set(barcodeTail, p);
+  parts.forEach(function(part){ out.set(part, p); p += part.length; });
   return out;
 }
 async function kirimKePrinter(d, ulang){
