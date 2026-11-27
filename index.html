@@ -514,58 +514,84 @@ async function autoSambungPrinter(){
 }
 function buildPrintBytes(d, ulang){
   var enc = new TextEncoder();
-  function txt(s){ return enc.encode(s); }
-  function cmd(){ return new Uint8Array(Array.prototype.slice.call(arguments)); }
   var parts = [];
-  function add(){ for(var i=0;i<arguments.length;i++) parts.push(arguments[i]); }
+  var W = 30; // lebar isi kotak (printer 58mm ~ 32 karakter, dikurangi 2 garis tepi)
 
-  add(cmd(0x1B,0x40));
-  add(cmd(0x1B,0x61,0x01)); // RATA TENGAH
+  function raw(){ parts.push(new Uint8Array(Array.prototype.slice.call(arguments))); }
+  function txt(s){ parts.push(enc.encode(s)); }
+  function rep(ch, n){ return n > 0 ? new Array(n + 1).join(ch) : ''; }
+  function pad(s, n){ s = String(s); return s.length >= n ? s.slice(0, n) : s + rep(' ', n - s.length); }
+  function center(s, n){
+    s = String(s).slice(0, n);
+    var l = Math.floor((n - s.length) / 2);
+    return rep(' ', l) + s + rep(' ', n - s.length - l);
+  }
+  function sep(){ txt('+' + rep('-', W) + '+\n'); }
+  function row(s){ txt('|' + pad(s, W) + '|\n'); }
+  function rowC(s){ txt('|' + center(s, W) + '|\n'); }
+  function rowBold(s){ raw(0x1B,0x45,1); txt('|' + center(s, W) + '|\n'); raw(0x1B,0x45,0); }
+  function rowBig(s){
+    // Teks dua kali lebar: 15 karakter dalam kotak 30 kolom
+    txt('|');
+    raw(0x1D,0x21,0x10);
+    txt(center(s, W / 2));
+    raw(0x1D,0x21,0x00);
+    txt('|\n');
+  }
+  function wrap(s){
+    var out = [];
+    s = String(s);
+    while (s.length > W) { out.push(s.slice(0, W)); s = s.slice(W); }
+    out.push(s);
+    return out;
+  }
 
-  add(txt("STP\nKITIR SHEET\n"));
-  if(ulang) add(txt("** CETAK ULANG **\n"));
+  var berat = Number(d.berat).toLocaleString('id-ID', {minimumFractionDigits:2, maximumFractionDigits:2});
+  var tgl = kitirFmtTanggal(d.tanggal) + ' ' + d.jam;
+  var cs = String(d.carsheet).trim();
 
-  // EDIT - CARSHEET, ganti 0x10 kalau mau lebih besar
-  add(cmd(0x1D,0x21,0x10));
-  add(txt("No. Carsheet: "+d.carsheet+"\n"));
-  add(cmd(0x1D,0x21,0x00));
+  // Reset printer
+  raw(0x1B,0x40);
 
-  add(txt("--------------------------------\n"));
+  // Teks di luar kotak (di atas), rata tengah
+  raw(0x1B,0x61,0x01);
+  txt('Tempel selotip di luar kotak\n');
+  raw(0x1B,0x61,0x00);
 
-  // EDIT - NAMA PRODUK, ganti 0x10 kalau mau lebih besar
-  add(cmd(0x1D,0x21,0x10));
-  add(txt(d.ukuran+"\n"));
-  add(cmd(0x1D,0x21,0x00));
+  // ----- KOTAK -----
+  sep();
+  rowC('STP');
+  rowC('KITIR SHEET');
+  if (ulang) rowC('** CETAK ULANG **');
+  sep();
+  row('No. Carsheet: ' + cs);
+  sep();
+  wrap(d.ukuran).forEach(function(line){ rowBold(line); });
+  rowC('BERAT');
+  rowBig(berat + ' kg');
+  rowBold('EXT ' + d.ext + ' -> ' + d.untukTf);
+  sep();
+  row(tgl + '  SHIFT ' + d.shift);
+  row('Operator: ' + d.nama);
+  sep();
 
-  add(txt("BERAT\n"));
-
-  // EDIT - ANGKA BERAT, ganti 0x11 kalau mau lebih besar
-  var berat = Number(d.berat).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2});
-  add(cmd(0x1D,0x21,0x11));
-  add(txt(berat+" kg\n"));
-  add(cmd(0x1D,0x21,0x00));
-
-  // EDIT - EXT -> TF, ganti 0x10 kalau mau lebih besar
-  add(cmd(0x1D,0x21,0x10));
-  add(txt("EXT "+d.ext+" -> "+d.untukTf+"\n"));
-  add(cmd(0x1D,0x21,0x00));
-
-  add(txt("--------------------------------\n"));
-  var tgl = kitirFmtTanggal(d.tanggal)+' '+d.jam;
-  add(txt(tgl+"  SHIFT "+d.shift+"\n"));
-  add(txt("Operator: "+d.nama+"\n\n"));
-
-  var code = String(d.carsheet).trim();
-  add(cmd(0x1B,0x61,0x01, 0x1D,0x68,60, 0x1D,0x77,2, 0x1D,0x48,2));
-  add(cmd(0x1D,0x6B,0x49, code.length));
-  add(txt(code));
-  add(cmd(0x00, 0x1B,0x61,0x00, 0x0A,0x0A,0x0A));
+  // ----- BARCODE (di bawah kotak, rata tengah) -----
+  txt('\n');
+  raw(0x1B,0x61,0x01);
+  raw(0x1D,0x68,50);          // tinggi barcode
+  raw(0x1D,0x77,2);           // lebar modul
+  raw(0x1D,0x48,2);           // angka di bawah barcode
+  raw(0x1D,0x6B,0x49, cs.length);
+  txt(cs);
+  raw(0x00);
+  raw(0x1B,0x61,0x00);
+  txt('\n\n\n');
 
   var len = 0;
   parts.forEach(function(p){ len += p.length; });
   var out = new Uint8Array(len);
-  var p = 0;
-  parts.forEach(function(part){ out.set(part, p); p += part.length; });
+  var pos = 0;
+  parts.forEach(function(p){ out.set(p, pos); pos += p.length; });
   return out;
 }
 async function kirimKePrinter(d, ulang){
