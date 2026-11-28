@@ -422,7 +422,7 @@ function kitirSimpan(){
       msgEl.className='ok';
     }else{
       btn.disabled=false;
-      msgEl.textContent='Gagal: '+(res&&res.error?res.error:'tidak diketahui')+'. Tekan Simpan lagi, data tidak akan ganda.';
+      msgEl.textContent=(res&&res.error)?res.error:'Gagal menyimpan.';
       msgEl.className='bad';
     }
   }).catch(function(err){
