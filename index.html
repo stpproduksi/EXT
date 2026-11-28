@@ -575,7 +575,6 @@ function buildPrintBytes(d, ulang){
   sep();
 
   // ----- BARCODE (di bawah kotak, rata tengah) -----
-  txt('\n');
   raw(0x1B,0x61,0x01);
   raw(0x1D,0x68,40);          // tinggi barcode
   raw(0x1D,0x77,2);           // lebar modul
