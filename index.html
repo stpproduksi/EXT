@@ -566,7 +566,9 @@ function buildPrintBytes(d, ulang){
   row('No. Carsheet: ' + cs);
   sep();
   wrap(d.ukuran).forEach(function(line){ rowBold(line); });
+  rowC('');
   rowBig('Berat : ' + Math.round(Number(d.berat)) + ' kg');
+  rowC('');
   rowBold('EXT ' + d.ext + ' -> ' + d.untukTf);
   sep();
   row(tgl + '  SHIFT ' + d.shift);
