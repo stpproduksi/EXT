@@ -576,14 +576,14 @@ function buildPrintBytes(d, ulang){
 
   // ----- BARCODE (di bawah kotak, rata tengah) -----
   raw(0x1B,0x61,0x01);
-  raw(0x1D,0x68,48);          // tinggi barcode
-  raw(0x1D,0x77,2);           // lebar modul
+  raw(0x1D,0x68,50);          // tinggi barcode
+  raw(0x1D,0x77,3);           // lebar modul
   raw(0x1D,0x48,2);           // angka di bawah barcode
   raw(0x1D,0x6B,0x49, cs.length);
   txt(cs);
   raw(0x00);
   raw(0x1B,0x61,0x00);
-  txt('\n\n\n\n\n');
+  txt('\n\n\n\n');
 
   var len = 0;
   parts.forEach(function(p){ len += p.length; });
